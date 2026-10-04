@@ -1,0 +1,36 @@
+{
+  "classroom": {
+    "live": {
+      "teacherPresent": false,
+      "teacherName": "",
+      "studentCount": 0,
+      "temperature": 26.0,
+      "fan": false,
+      "light": false,
+      "ac": false,
+      "projector": false,
+      "lastUpdated": "00:00:00"
+    },
+    "alerts": {
+      "sample_alert_001": {
+        "type": "UNKNOWN_PERSON",
+        "message": "Unauthorized entry detected without RFID tap",
+        "time": "09:30:15",
+        "students": 0,
+        "teacherPresent": false
+      }
+    },
+    "history": {
+      "sample_history_001": {
+        "time": "09:30:00",
+        "teacher": "ABSENT",
+        "students": 0,
+        "temp": 26.0,
+        "fan": 0,
+        "light": 0,
+        "ac": 0,
+        "proj": 0
+      }
+    }
+  }
+}

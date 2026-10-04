@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ac_active">#3B82F6</color>
+    <color name="appliance_inactive">#CBD5E1</color>
+    <color name="background">#F8FAFC</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="divider">#E2E8F0</color>
+    <color name="fan_active">#06B6D4</color>
+    <color name="light_active">#EAB308</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="primary">#2563EB</color>
+    <color name="primary_variant">#1D4ED8</color>
+    <color name="projector_active">#8B5CF6</color>
+    <color name="secondary">#06B6D4</color>
+    <color name="secondary_variant">#0891B2</color>
+    <color name="status_blue">#3B82F6</color>
+    <color name="status_blue_light">#DBEAFE</color>
+    <color name="status_green">#10B981</color>
+    <color name="status_green_light">#D1FAE5</color>
+    <color name="status_orange">#F59E0B</color>
+    <color name="status_orange_light">#FEF3C7</color>
+    <color name="status_red">#EF4444</color>
+    <color name="status_red_light">#FEE2E2</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="text_muted">#94A3B8</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <string name="alerts_empty">No unauthorized intrusions detected. Classroom entrance is secure.</string>
+    <string name="alerts_title">Security Intrusion Logs</string>
+    <string name="app_name">Smart Classroom</string>
+    <string name="btn_login">Sign In</string>
+    <string name="course_code">CSE 316 · Team 06</string>
+    <string name="demo_credentials_hint">Demo accounts:\n• Teacher: teacher@uap.edu / 123456\n• Admin: admin@uap.edu / 123456</string>
+    <string name="email_hint">Faculty / Admin Email</string>
+    <string name="firebase_database_url" translatable="false">https://smart-classroom-team06-default-rtdb.asia-southeast1.firebasedatabase.app</string>
+    <string name="gcm_defaultSenderId" translatable="false">10063162026</string>
+    <string name="google_api_key" translatable="false">AIzaSyDummyKeyForGoogleServicesBuild001</string>
+    <string name="google_app_id" translatable="false">1:10063162026:android:b2026uapcse316</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDummyKeyForGoogleServicesBuild001</string>
+    <string name="google_storage_bucket" translatable="false">smart-classroom-team06.appspot.com</string>
+    <string name="history_empty">No telemetry records available yet.</string>
+    <string name="history_title">Periodic Telemetry Timeline</string>
+    <string name="last_updated">Last updated: %s</string>
+    <string name="lbl_ac">AC</string>
+    <string name="lbl_appliances">Appliance Automation</string>
+    <string name="lbl_fan">Fan</string>
+    <string name="lbl_light">Light</string>
+    <string name="lbl_projector">Projector</string>
+    <string name="lbl_student_count">Active Students</string>
+    <string name="lbl_teacher_status">Teacher Status</string>
+    <string name="lbl_temperature">Room Temperature</string>
+    <string name="login_subtitle">Authorized Faculty &amp; Admin Access</string>
+    <string name="login_title">Classroom Automation</string>
+    <string name="nav_alerts">Intruder Alerts</string>
+    <string name="nav_dashboard">Live Status</string>
+    <string name="nav_history">Logs &amp; History</string>
+    <string name="password_hint">Password</string>
+    <string name="project_id" translatable="false">smart-classroom-team06</string>
+    <string name="status_absent">ABSENT</string>
+    <string name="status_off">OFF</string>
+    <string name="status_on">ON</string>
+    <string name="status_present">PRESENT</string>
+    <string name="uap_header">University of Asia Pacific</string>
+    <style name="Theme.SmartClassroom" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary_variant</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="android:statusBarColor">@color/primary_variant</item>
+    </style>
+    <style name="Theme.SmartClassroom.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/primary_variant</item>
+    </style>
+</resources>

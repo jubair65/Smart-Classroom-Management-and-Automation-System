@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#2563EB</color>
+    <color name="primary_variant">#1D4ED8</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <color name="secondary">#06B6D4</color>
+    <color name="secondary_variant">#0891B2</color>
+    <color name="on_secondary">#FFFFFF</color>
+
+    <color name="background">#F8FAFC</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="divider">#E2E8F0</color>
+
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_muted">#94A3B8</color>
+
+    <!-- Status Colors -->
+    <color name="status_green">#10B981</color>
+    <color name="status_green_light">#D1FAE5</color>
+    <color name="status_red">#EF4444</color>
+    <color name="status_red_light">#FEE2E2</color>
+    <color name="status_orange">#F59E0B</color>
+    <color name="status_orange_light">#FEF3C7</color>
+    <color name="status_blue">#3B82F6</color>
+    <color name="status_blue_light">#DBEAFE</color>
+
+    <!-- Appliance Indicators -->
+    <color name="fan_active">#06B6D4</color>
+    <color name="light_active">#EAB308</color>
+    <color name="ac_active">#3B82F6</color>
+    <color name="projector_active">#8B5CF6</color>
+    <color name="appliance_inactive">#CBD5E1</color>
+</resources>

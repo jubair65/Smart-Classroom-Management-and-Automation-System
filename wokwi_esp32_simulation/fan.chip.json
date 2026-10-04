@@ -1,0 +1,12 @@
+{
+  "name": "fan",
+  "author": "Team 06 - CSE 315 / 316",
+  "pins": [
+    "IN+",
+    "IN-"
+  ],
+  "display": {
+    "width": 80,
+    "height": 80
+  }
+}

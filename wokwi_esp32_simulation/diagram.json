@@ -1,0 +1,281 @@
+{
+  "version": 1,
+  "author": "Team 06 - CSE 315 / 316",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 160,
+      "left": 310,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd",
+      "top": -30,
+      "left": 30,
+      "attrs": { "pins": "i2c" }
+    },
+    {
+      "type": "board-mfrc522",
+      "id": "rfid",
+      "top": 190,
+      "left": 20,
+      "attrs": { "uid": "DE:AD:BE:EF" }
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht",
+      "top": -40,
+      "left": 360,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": -30,
+      "left": 510,
+      "attrs": { "hasLocalSound": "true" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_card0",
+      "top": 450,
+      "left": 30,
+      "attrs": { "color": "orange", "key": "t", "label": "T: Sayma" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_card1",
+      "top": 450,
+      "left": 100,
+      "attrs": { "color": "blue", "key": "1", "label": "S1: Hasanul" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_card2",
+      "top": 450,
+      "left": 170,
+      "attrs": { "color": "cyan", "key": "2", "label": "S2: Jubair" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_card3",
+      "top": 540,
+      "left": 30,
+      "attrs": { "color": "purple", "key": "3", "label": "S3: Maria" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_card4",
+      "top": 540,
+      "left": 100,
+      "attrs": { "color": "gray", "key": "u", "label": "Unknown" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "res_unk",
+      "top": 540,
+      "left": 170,
+      "attrs": { "value": "10000" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl_cards",
+      "top": 415,
+      "left": 30,
+      "attrs": { "text": "RFID CARD PUSH BUTTONS" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_ir1",
+      "top": 480,
+      "left": 280,
+      "attrs": { "color": "green", "label": "IR1: Outside" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn_ir2",
+      "top": 480,
+      "left": 400,
+      "attrs": { "color": "red", "label": "IR2: Inside" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl_ir",
+      "top": 445,
+      "left": 290,
+      "attrs": { "text": "DOOR SENSORS (ENTRY: IR1->IR2 | EXIT: IR2->IR1)" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_fan",
+      "top": 70,
+      "left": 630,
+      "attrs": {}
+    },
+    {
+      "type": "chip-fan",
+      "id": "fan1",
+      "top": 60,
+      "left": 780,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl_fan",
+      "top": 35,
+      "left": 790,
+      "attrs": { "text": "5V DC COOLING FAN" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_light",
+      "top": 180,
+      "left": 630,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_light",
+      "top": 180,
+      "left": 790,
+      "attrs": { "color": "yellow", "label": "LIGHT" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "res_light",
+      "top": 215,
+      "left": 850,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_ac",
+      "top": 290,
+      "left": 630,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_ac",
+      "top": 290,
+      "left": 790,
+      "attrs": { "color": "blue", "label": "AC" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "res_ac",
+      "top": 325,
+      "left": 850,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay_proj",
+      "top": 400,
+      "left": 630,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_proj",
+      "top": 400,
+      "left": 790,
+      "attrs": { "color": "white", "label": "PROJECTOR" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "res_proj",
+      "top": 435,
+      "left": 850,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-text",
+      "id": "lbl_title",
+      "top": -55,
+      "left": 30,
+      "attrs": { "text": "SMART CLASSROOM SIMULATION (ESP32)" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+
+    [ "lcd:GND", "esp:GND.1", "black", [ "v20", "h-20" ] ],
+    [ "lcd:VCC", "esp:VIN", "red", [ "v15", "h40" ] ],
+    [ "lcd:SDA", "esp:D21", "green", [ "v25", "h60" ] ],
+    [ "lcd:SCL", "esp:D22", "yellow", [ "v30", "h50" ] ],
+
+    [ "rfid:3.3V", "esp:3V3", "red", [ "v0" ] ],
+    [ "rfid:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "rfid:RST", "esp:D4", "purple", [ "v0" ] ],
+    [ "rfid:SDA", "esp:D5", "orange", [ "v0" ] ],
+    [ "rfid:SCK", "esp:D18", "gray", [ "v0" ] ],
+    [ "rfid:MISO", "esp:D19", "gold", [ "v0" ] ],
+    [ "rfid:MOSI", "esp:D23", "blue", [ "v0" ] ],
+
+    [ "dht:VCC", "esp:3V3", "red", [ "v20", "h-30" ] ],
+    [ "dht:GND", "esp:GND.1", "black", [ "v20", "h-40" ] ],
+    [ "dht:SDA", "esp:D27", "green", [ "v20", "h-20" ] ],
+
+    [ "buzzer:1", "esp:D25", "purple", [ "v20", "h-60" ] ],
+    [ "buzzer:2", "esp:GND.1", "black", [ "v20", "h-70" ] ],
+
+    [ "btn_card0:1.l", "esp:D15", "orange", [ "h0" ] ],
+    [ "btn_card0:2.l", "esp:GND.1", "black", [ "h0" ] ],
+
+    [ "btn_card1:1.l", "esp:D2", "blue", [ "h0" ] ],
+    [ "btn_card1:2.l", "esp:GND.1", "black", [ "h0" ] ],
+
+    [ "btn_card2:1.l", "esp:RX2", "cyan", [ "h0" ] ],
+    [ "btn_card2:2.l", "esp:GND.1", "black", [ "h0" ] ],
+
+    [ "btn_card3:1.l", "esp:D12", "purple", [ "h0" ] ],
+    [ "btn_card3:2.l", "esp:GND.1", "black", [ "h0" ] ],
+
+    [ "btn_card4:1.l", "esp:D34", "gray", [ "h0" ] ],
+    [ "btn_card4:2.l", "esp:GND.1", "black", [ "h0" ] ],
+    [ "res_unk:1", "esp:3V3", "red", [ "v0" ] ],
+    [ "res_unk:2", "esp:D34", "gray", [ "v0" ] ],
+
+    [ "btn_ir1:1.l", "esp:D32", "green", [ "h0" ] ],
+    [ "btn_ir1:2.l", "esp:GND.1", "black", [ "h0" ] ],
+
+    [ "btn_ir2:1.l", "esp:D33", "red", [ "h0" ] ],
+    [ "btn_ir2:2.l", "esp:GND.1", "black", [ "h0" ] ],
+
+    [ "relay_fan:VCC", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_fan:GND", "esp:GND.2", "black", [ "v0" ] ],
+    [ "relay_fan:IN", "esp:D26", "blue", [ "v0" ] ],
+    [ "relay_fan:COM", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_fan:NO", "fan1:IN+", "green", [ "v0" ] ],
+    [ "fan1:IN-", "esp:GND.2", "black", [ "v20", "h-150" ] ],
+
+    [ "relay_light:VCC", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_light:GND", "esp:GND.2", "black", [ "v0" ] ],
+    [ "relay_light:IN", "esp:D14", "blue", [ "v0" ] ],
+    [ "relay_light:COM", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_light:NO", "led_light:A", "gold", [ "v0" ] ],
+    [ "led_light:C", "res_light:1", "black", [ "v0" ] ],
+    [ "res_light:2", "esp:GND.2", "black", [ "v20", "h-150" ] ],
+
+    [ "relay_ac:VCC", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_ac:GND", "esp:GND.2", "black", [ "v0" ] ],
+    [ "relay_ac:IN", "esp:D13", "blue", [ "v0" ] ],
+    [ "relay_ac:COM", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_ac:NO", "led_ac:A", "cyan", [ "v0" ] ],
+    [ "led_ac:C", "res_ac:1", "black", [ "v0" ] ],
+    [ "res_ac:2", "esp:GND.2", "black", [ "v20", "h-150" ] ],
+
+    [ "relay_proj:VCC", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_proj:GND", "esp:GND.2", "black", [ "v0" ] ],
+    [ "relay_proj:IN", "esp:TX2", "blue", [ "v0" ] ],
+    [ "relay_proj:COM", "esp:VIN", "red", [ "v0" ] ],
+    [ "relay_proj:NO", "led_proj:A", "white", [ "v0" ] ],
+    [ "led_proj:C", "res_proj:1", "black", [ "v0" ] ],
+    [ "res_proj:2", "esp:GND.2", "black", [ "v20", "h-150" ] ]
+  ]
+}

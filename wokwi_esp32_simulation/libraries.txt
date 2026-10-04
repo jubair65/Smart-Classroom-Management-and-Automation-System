@@ -1,0 +1,7 @@
+# Wokwi Library Manager
+# Libraries automatically installed in simulation:
+
+LiquidCrystal I2C
+MFRC522
+DHT sensor library
+Adafruit Unified Sensor

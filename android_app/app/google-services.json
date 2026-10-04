@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "10063162026",
+    "firebase_url": "https://smart-classroom-team06-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smart-classroom-team06",
+    "storage_bucket": "smart-classroom-team06.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10063162026:android:b2026uapcse316",
+        "android_client_info": {
+          "package_name": "com.uap.cse316.smartclassroom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDummyKeyForGoogleServicesBuild001"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

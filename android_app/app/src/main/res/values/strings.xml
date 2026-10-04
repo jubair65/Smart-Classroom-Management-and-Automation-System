@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">Smart Classroom</string>
+    <string name="uap_header">University of Asia Pacific</string>
+    <string name="course_code">CSE 316 · Team 06</string>
+    <string name="login_title">Classroom Automation</string>
+    <string name="login_subtitle">Authorized Faculty &amp; Admin Access</string>
+    <string name="email_hint">Faculty / Admin Email</string>
+    <string name="password_hint">Password</string>
+    <string name="btn_login">Sign In</string>
+    <string name="demo_credentials_hint">Demo accounts:\n• Teacher: teacher@uap.edu / 123456\n• Admin: admin@uap.edu / 123456</string>
+    
+    <!-- Navigation -->
+    <string name="nav_dashboard">Live Status</string>
+    <string name="nav_alerts">Intruder Alerts</string>
+    <string name="nav_history">Logs &amp; History</string>
+
+    <!-- Dashboard -->
+    <string name="lbl_teacher_status">Teacher Status</string>
+    <string name="lbl_student_count">Active Students</string>
+    <string name="lbl_temperature">Room Temperature</string>
+    <string name="lbl_appliances">Appliance Automation</string>
+    <string name="lbl_fan">Fan</string>
+    <string name="lbl_light">Light</string>
+    <string name="lbl_ac">AC</string>
+    <string name="lbl_projector">Projector</string>
+    <string name="status_present">PRESENT</string>
+    <string name="status_absent">ABSENT</string>
+    <string name="status_on">ON</string>
+    <string name="status_off">OFF</string>
+    <string name="last_updated">Last updated: %s</string>
+
+    <!-- Alerts -->
+    <string name="alerts_title">Security Intrusion Logs</string>
+    <string name="alerts_empty">No unauthorized intrusions detected. Classroom entrance is secure.</string>
+
+    <!-- History -->
+    <string name="history_title">Periodic Telemetry Timeline</string>
+    <string name="history_empty">No telemetry records available yet.</string>
+</resources>
