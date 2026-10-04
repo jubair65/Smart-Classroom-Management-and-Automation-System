@@ -43,7 +43,7 @@
       "id": "btn_card0",
       "top": 450,
       "left": 30,
-      "attrs": { "color": "orange", "key": "t", "label": "T: Sayma" }
+      "attrs": { "color": "orange", "key": "t", "label": "T: Sayma Ma'am" }
     },
     {
       "type": "wokwi-pushbutton",

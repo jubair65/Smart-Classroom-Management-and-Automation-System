@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -41,11 +43,32 @@ class AlertsFragment : Fragment() {
             loadAlerts()
         }
 
+        binding.btnDeleteAlerts.setOnClickListener {
+            confirmClearAlerts()
+        }
+
         loadAlerts()
     }
 
+    private fun confirmClearAlerts() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Clear All Alerts?")
+            .setMessage("This will permanently delete all security intrusion alert logs from Firebase.")
+            .setPositiveButton("Clear All") { _, _ ->
+                FirebaseManager.getAlertsReference().removeValue()
+                    .addOnSuccessListener {
+                        Toast.makeText(requireContext(), "All alerts cleared.", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(requireContext(), "Failed to clear: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun loadAlerts() {
-        val alertsQuery = FirebaseManager.getAlertsReference().limitToLast(25)
+        val alertsQuery = FirebaseManager.getAlertsReference().limitToLast(50)
 
         alertsEventListener?.let { alertsQuery.removeEventListener(it) }
 
@@ -69,9 +92,11 @@ class AlertsFragment : Fragment() {
                 if (alerts.isEmpty()) {
                     binding.rvAlerts.visibility = View.GONE
                     binding.emptyAlertsView.visibility = View.VISIBLE
+                    binding.btnDeleteAlerts.visibility = View.GONE
                 } else {
                     binding.rvAlerts.visibility = View.VISIBLE
                     binding.emptyAlertsView.visibility = View.GONE
+                    binding.btnDeleteAlerts.visibility = View.VISIBLE
                     adapter.setAlerts(alerts)
                 }
             }
@@ -88,7 +113,7 @@ class AlertsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         alertsEventListener?.let {
-            FirebaseManager.getAlertsReference().limitToLast(25).removeEventListener(it)
+            FirebaseManager.getAlertsReference().limitToLast(50).removeEventListener(it)
         }
         _binding = null
     }

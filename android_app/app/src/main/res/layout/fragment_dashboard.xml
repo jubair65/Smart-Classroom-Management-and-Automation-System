@@ -94,7 +94,7 @@
                             android:id="@+id/tvTeacherName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Sayma (Lecturer)"
+                            android:text="Sayma Ma'am (Lecturer)"
                             android:textSize="17sp"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary"
@@ -301,7 +301,7 @@
                             android:id="@+id/tvTempStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="DHT22 Sensor Reading"
+                            android:text="Indoor Climate Monitor"
                             android:textSize="11sp"
                             android:textColor="@color/text_muted" />
                     </LinearLayout>
@@ -371,7 +371,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Auto: ≥ 27.0°C"
+                            android:text="Ventilation System"
                             android:textSize="11sp"
                             android:textColor="@color/text_muted" />
 
@@ -379,8 +379,8 @@
                             android:id="@+id/tvFanStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/status_off"
-                            android:textSize="14sp"
+                            android:text="STANDBY"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/appliance_inactive"
                             android:layout_marginTop="10dp" />
@@ -417,7 +417,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Auto: On Occupancy"
+                            android:text="Smart Illumination"
                             android:textSize="11sp"
                             android:textColor="@color/text_muted" />
 
@@ -425,8 +425,8 @@
                             android:id="@+id/tvLightStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/status_off"
-                            android:textSize="14sp"
+                            android:text="STANDBY"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/appliance_inactive"
                             android:layout_marginTop="10dp" />
@@ -471,7 +471,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Auto: ≥ 30.0°C"
+                            android:text="Cooling Unit"
                             android:textSize="11sp"
                             android:textColor="@color/text_muted" />
 
@@ -479,8 +479,8 @@
                             android:id="@+id/tvAcStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/status_off"
-                            android:textSize="14sp"
+                            android:text="STANDBY"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/appliance_inactive"
                             android:layout_marginTop="10dp" />
@@ -517,7 +517,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Auto: Teacher Only"
+                            android:text="Multimedia System"
                             android:textSize="11sp"
                             android:textColor="@color/text_muted" />
 
@@ -525,8 +525,8 @@
                             android:id="@+id/tvProjStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/status_off"
-                            android:textSize="14sp"
+                            android:text="STANDBY"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/appliance_inactive"
                             android:layout_marginTop="10dp" />
@@ -534,12 +534,12 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <!-- Footer: Timestamp & Connectivity -->
+            <!-- Footer: Status Indicator -->
             <TextView
                 android:id="@+id/tvLastSync"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Connecting to Firebase Realtime Database..."
+                android:text="● Connecting to Classroom Sync..."
                 android:textSize="11sp"
                 android:textColor="@color/text_muted"
                 android:gravity="center"

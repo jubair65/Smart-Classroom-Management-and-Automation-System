@@ -106,16 +106,16 @@ To verify that the light and AC do **not** turn off when the teacher leaves:
      * Projector stays **OFF**.
 
 2. **Teacher Enters**:
-   * Click **T: Sayma (Orange button)** $\rightarrow$ LCD shows: `Teacher card OK / Sayma`.
-   * Click **IR1** then **IR2** $\rightarrow$ Sayma enters!
+   * Click **T: Sayma Ma'am (Orange button)** $\rightarrow$ LCD shows: `Teacher card OK / Sayma Ma'am`.
+   * Click **IR1** then **IR2** $\rightarrow$ Sayma Ma'am enters!
    * **Result**:
      * `studentCount = 1`, `teacherPresent = true`.
      * **Projector Relay & White LED turn ON**!
      * **Light stays ON**!
 
 3. **Teacher Leaves (The Critical Test)**:
-   * Click **T: Sayma (Orange button)** $\rightarrow$ `Sayma tapped card`.
-   * Click **IR2 (Red button)** then **IR1 (Green button)** $\rightarrow$ Sayma exits!
+   * Click **T: Sayma Ma'am (Orange button)** $\rightarrow$ `Sayma Ma'am tapped card`.
+   * Click **IR2 (Red button)** then **IR1 (Green button)** $\rightarrow$ Sayma Ma'am exits!
    * **Result**:
      * `teacherPresent = false`, but `studentCount` is **STILL 1**!
      * **Projector turns OFF** (because teacher left).
@@ -135,7 +135,7 @@ To verify that the light and AC do **not** turn off when the teacher leaves:
 ## ⌨️ Serial Monitor Shortcuts
 
 You can also run all tests by typing these into the Serial Monitor at the bottom:
-* `T`   $\rightarrow$ Tap Teacher Card (Sayma)
+* `T`   $\rightarrow$ Tap Teacher Card (Sayma Ma'am)
 * `S1`  $\rightarrow$ Tap Student 1 Card (Hasanul)
 * `S2`  $\rightarrow$ Tap Student 2 Card (Jubair)
 * `S3`  $\rightarrow$ Tap Student 3 Card (Maria)

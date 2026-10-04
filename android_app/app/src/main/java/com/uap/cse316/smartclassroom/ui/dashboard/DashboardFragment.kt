@@ -150,7 +150,12 @@ class DashboardFragment : Fragment() {
 
         // 1. Teacher Status
         if (data.teacherPresent) {
-            binding.tvTeacherName.text = if (data.teacherName.isNotBlank()) "${data.teacherName} (Lecturer)" else "Sayma (Lecturer)"
+            val teacherNameClean = if (data.teacherName.isNotBlank()) {
+                if (data.teacherName.equals("Sayma", ignoreCase = true)) "Sayma Ma'am" else data.teacherName
+            } else {
+                "Sayma Ma'am"
+            }
+            binding.tvTeacherName.text = "$teacherNameClean (Lecturer)"
             binding.tvTeacherBadge.text = getString(R.string.status_present)
             binding.tvTeacherBadge.setTextColor(ContextCompat.getColor(context, R.color.status_green))
             binding.tvTeacherBadge.setBackgroundColor(ContextCompat.getColor(context, R.color.status_green_light))
@@ -182,36 +187,36 @@ class DashboardFragment : Fragment() {
         binding.tvTemperature.text = String.format("%.1f°C", data.temperature)
         when {
             data.temperature >= 30.0 -> {
-                binding.tvTempStatus.text = "High Heat (Fan & AC ON)"
+                binding.tvTempStatus.text = "Elevated Temperature • Cooling Active"
                 binding.tvTempBadge.text = "High Temp"
                 binding.tvTempBadge.setTextColor(ContextCompat.getColor(context, R.color.status_red))
                 binding.tvTempBadge.setBackgroundColor(ContextCompat.getColor(context, R.color.status_red_light))
             }
             data.temperature >= 27.0 -> {
-                binding.tvTempStatus.text = "Warm (Fan Auto ON)"
+                binding.tvTempStatus.text = "Moderate Temperature • Ventilation Active"
                 binding.tvTempBadge.text = "Warm"
                 binding.tvTempBadge.setTextColor(ContextCompat.getColor(context, R.color.status_orange))
                 binding.tvTempBadge.setBackgroundColor(ContextCompat.getColor(context, R.color.status_orange_light))
             }
             data.temperature <= 25.5 -> {
-                binding.tvTempStatus.text = "Cool / Normal Room"
+                binding.tvTempStatus.text = "Pleasant Climate • Energy Saving"
                 binding.tvTempBadge.text = "Comfortable"
                 binding.tvTempBadge.setTextColor(ContextCompat.getColor(context, R.color.status_green))
                 binding.tvTempBadge.setBackgroundColor(ContextCompat.getColor(context, R.color.status_green_light))
             }
             else -> {
-                binding.tvTempStatus.text = "Ambient Classroom Temp"
+                binding.tvTempStatus.text = "Normal Room Temperature"
                 binding.tvTempBadge.text = "Normal"
                 binding.tvTempBadge.setTextColor(ContextCompat.getColor(context, R.color.primary))
                 binding.tvTempBadge.setBackgroundColor(ContextCompat.getColor(context, R.color.status_blue_light))
             }
         }
 
-        // 5. Appliances
-        updateApplianceCard(binding.cardFan, binding.tvFanStatus, data.fan, R.color.fan_active, "🌀 Fan")
-        updateApplianceCard(binding.cardLight, binding.tvLightStatus, data.light, R.color.light_active, "💡 Light")
-        updateApplianceCard(binding.cardAc, binding.tvAcStatus, data.ac, R.color.ac_active, "❄️ AC")
-        updateApplianceCard(binding.cardProj, binding.tvProjStatus, data.projector, R.color.projector_active, "📽️ Proj")
+        // 5. Appliances (Professional IoT state badges)
+        updateApplianceCard(binding.cardFan, binding.tvFanStatus, data.fan, R.color.fan_active, "RUNNING", "STANDBY")
+        updateApplianceCard(binding.cardLight, binding.tvLightStatus, data.light, R.color.light_active, "ACTIVE", "STANDBY")
+        updateApplianceCard(binding.cardAc, binding.tvAcStatus, data.ac, R.color.ac_active, "COOLING", "STANDBY")
+        updateApplianceCard(binding.cardProj, binding.tvProjStatus, data.projector, R.color.projector_active, "ACTIVE", "STANDBY")
 
         // 6. Header Clock & Footer Last Sync with Local Time
         val timeFmt = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
@@ -223,7 +228,7 @@ class DashboardFragment : Fragment() {
 
         binding.tvLiveDate.text = "📅 $displayDate"
         binding.tvLiveClock.text = displayTime
-        binding.tvLastSync.text = "Firebase Live • Synced at $displayDate $displayTime"
+        binding.tvLastSync.text = "● Real-Time Cloud Sync Active • $displayTime"
     }
 
     private fun updateApplianceCard(
@@ -231,16 +236,17 @@ class DashboardFragment : Fragment() {
         statusText: TextView,
         isOn: Boolean,
         activeColorRes: Int,
-        label: String
+        activeLabel: String,
+        inactiveLabel: String
     ) {
         val context = requireContext()
         if (isOn) {
-            statusText.text = getString(R.string.status_on)
+            statusText.text = activeLabel
             statusText.setTextColor(ContextCompat.getColor(context, activeColorRes))
             card.strokeWidth = 2
             card.strokeColor = ContextCompat.getColor(context, activeColorRes)
         } else {
-            statusText.text = getString(R.string.status_off)
+            statusText.text = inactiveLabel
             statusText.setTextColor(ContextCompat.getColor(context, R.color.appliance_inactive))
             card.strokeWidth = 1
             card.strokeColor = ContextCompat.getColor(context, R.color.divider)

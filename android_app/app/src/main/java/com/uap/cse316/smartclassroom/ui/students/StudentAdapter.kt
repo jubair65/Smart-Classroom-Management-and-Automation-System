@@ -61,17 +61,17 @@ class StudentAdapter(private val studentsList: MutableList<StudentItem> = mutabl
             binding.tvRankBadge.text = rankText
 
             // Verification & Active Status
-            binding.tvStudentStatus.text = "🟢 Verified RFID • Active in Class"
+            binding.tvStudentStatus.text = "🟢 Verified • In Attendance"
 
             // Entering Time
             val timeDisplay = if (item.enterTime.isNotBlank()) {
                 if (item.date.isNotBlank()) {
-                    "🕒 Entered: ${item.enterTime} · ${item.date}"
+                    "🕒 Arrived: ${item.enterTime} • ${item.date}"
                 } else {
-                    "🕒 Entered: ${item.enterTime}"
+                    "🕒 Arrived: ${item.enterTime}"
                 }
             } else {
-                "🕒 Entered recently"
+                "🕒 Arrived recently"
             }
             binding.tvEnterTime.text = timeDisplay
         }

@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -49,7 +51,28 @@ class HistoryFragment : Fragment() {
             loadData()
         }
 
+        binding.btnDeleteHistory.setOnClickListener {
+            confirmClearHistory()
+        }
+
         loadData()
+    }
+
+    private fun confirmClearHistory() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Clear Activity History?")
+            .setMessage("This will permanently delete all past telemetry snapshots and history logs from Firebase.")
+            .setPositiveButton("Clear All") { _, _ ->
+                FirebaseManager.getHistoryReference().removeValue()
+                    .addOnSuccessListener {
+                        Toast.makeText(requireContext(), "History logs cleared.", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(requireContext(), "Failed to clear: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun loadData() {
@@ -94,7 +117,7 @@ class HistoryFragment : Fragment() {
     }
 
     private fun listenToHistoryRecords() {
-        val histQuery = FirebaseManager.getHistoryReference().limitToLast(20)
+        val histQuery = FirebaseManager.getHistoryReference().limitToLast(30)
         historyEventListener?.let { histQuery.removeEventListener(it) }
 
         historyEventListener = object : ValueEventListener {
@@ -132,7 +155,7 @@ class HistoryFragment : Fragment() {
         if (!isAdded || _binding == null) return
 
         val combinedList = mutableListOf<HistoryItem>()
-        // 1. Position 0 is ALWAYS the guaranteed real-time active snapshot
+        // 1. Position 0 is the real-time active snapshot if available
         currentLiveItem?.let { combinedList.add(it) }
 
         // 2. Position 1..N are past historical logs
@@ -141,9 +164,12 @@ class HistoryFragment : Fragment() {
         if (combinedList.isEmpty()) {
             binding.rvHistory.visibility = View.GONE
             binding.emptyHistoryView.visibility = View.VISIBLE
+            binding.btnDeleteHistory.visibility = View.GONE
         } else {
             binding.rvHistory.visibility = View.VISIBLE
             binding.emptyHistoryView.visibility = View.GONE
+            // Show clear button if there are past records to clear
+            binding.btnDeleteHistory.visibility = if (pastHistoryItems.isNotEmpty()) View.VISIBLE else View.GONE
             adapter.setHistory(combinedList)
         }
     }
@@ -151,9 +177,8 @@ class HistoryFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         liveEventListener?.let { FirebaseManager.getLiveReference().removeEventListener(it) }
-        historyEventListener?.let { FirebaseManager.getHistoryReference().limitToLast(20).removeEventListener(it) }
+        historyEventListener?.let { FirebaseManager.getHistoryReference().limitToLast(30).removeEventListener(it) }
         _binding = null
     }
 
 }
-

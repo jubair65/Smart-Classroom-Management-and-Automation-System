@@ -47,7 +47,7 @@ class LoginActivity : AppCompatActivity() {
         val isAdmin = email.equals("admin@uap.edu", ignoreCase = true) || email.contains("admin", ignoreCase = true)
 
         if ((isTeacher || isAdmin) && password.length >= 6) {
-            val roleName = if (isAdmin) "Administrator" else "Teacher (Sayma)"
+            val roleName = if (isAdmin) "Administrator" else "Teacher (Sayma Ma'am)"
             Toast.makeText(this, "Welcome, $roleName!", Toast.LENGTH_SHORT).show()
 
             val intent = Intent(this, MainActivity::class.java).apply {

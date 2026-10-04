@@ -46,16 +46,16 @@ const unsigned long RECORD_MS     = 30000UL; // Cloud log interval
 
 // ---------------- USER REGISTRY ----------------
 struct Person {
-  char name[8];
+  char name[16];
   bool isTeacher;
   bool inside;
 };
 
 Person people[4] = {
-  { "Sayma",   true,  false },
-  { "Hasanul", false, false },
-  { "Jubair",  false, false },
-  { "Maria",   false, false }
+  { "Sayma Ma'am", true,  false },
+  { "Hasanul",     false, false },
+  { "Jubair",      false, false },
+  { "Maria",       false, false }
 };
 
 // ---------------- SYSTEM STATE ----------------

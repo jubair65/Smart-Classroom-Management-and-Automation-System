@@ -34,7 +34,12 @@ class AlertAdapter(private val alertsList: MutableList<AlertItem> = mutableListO
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: AlertItem) {
-            binding.tvAlertTitle.text = if (item.type.isNotBlank()) item.type else "UNAUTHORIZED PERSON"
+            val cleanTitle = when (item.type.uppercase()) {
+                "UNKNOWN_PERSON" -> "Unverified Entry"
+                "UNKNOWN" -> "Unregistered Card"
+                else -> item.type.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
+            }
+            binding.tvAlertTitle.text = cleanTitle
             binding.tvAlertMessage.text = item.message
 
             // Format date and time
@@ -56,8 +61,7 @@ class AlertAdapter(private val alertsList: MutableList<AlertItem> = mutableListO
             }
 
             val teacherStatus = if (item.teacherPresent) "Teacher Present" else "Teacher Absent"
-            val unknownNote = if (item.unknownCount > 0) " · Total Unknowns: ${item.unknownCount}" else ""
-            binding.tvAlertContext.text = "Classroom at event: ${item.students} students · $teacherStatus$unknownNote"
+            binding.tvAlertContext.text = "At time of alert: ${item.students} students • $teacherStatus"
         }
     }
 }

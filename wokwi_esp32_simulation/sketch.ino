@@ -71,16 +71,16 @@ const unsigned long DEBOUNCE_MS   = 50UL;    // Button debounce window
 
 // ---------------- USER REGISTRY ----------------
 struct Person {
-  char name[8];
+  char name[16];
   bool isTeacher;
   bool inside;
 };
 
 Person people[4] = {
-  { "Sayma",   true,  false }, // Teacher
-  { "Hasanul", false, false }, // Student 1
-  { "Jubair",  false, false }, // Student 2
-  { "Maria",   false, false }  // Student 3
+  { "Sayma Ma'am", true,  false }, // Teacher
+  { "Hasanul",     false, false }, // Student 1
+  { "Jubair",      false, false }, // Student 2
+  { "Maria",       false, false }  // Student 3
 };
 
 // ---------------- SYSTEM STATE ----------------
@@ -415,7 +415,7 @@ void checkMFRC522() {
   Serial.print(F("[RFID SCAN] Card UID: "));
   Serial.println(scannedHex);
 
-  if (scannedHex.indexOf("DEADBEEF") >= 0)      onCard(0); // Teacher (Sayma)
+  if (scannedHex.indexOf("DEADBEEF") >= 0)      onCard(0); // Teacher (Sayma Ma'am)
   else if (scannedHex.indexOf("12345678") >= 0) onCard(1); // Student 1 (Hasanul)
   else if (scannedHex.indexOf("AABBCCDD") >= 0) onCard(2); // Student 2 (Jubair)
   else if (scannedHex.indexOf("11223344") >= 0) onCard(3); // Student 3 (Maria)

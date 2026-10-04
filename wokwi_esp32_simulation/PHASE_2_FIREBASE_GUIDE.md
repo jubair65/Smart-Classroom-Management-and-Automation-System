@@ -98,7 +98,7 @@ Updated automatically whenever occupancy, temperature, or appliances change stat
 ```json
 {
   "teacherPresent": true,
-  "teacherName": "Sayma",
+  "teacherName": "Sayma Ma'am",
   "studentCount": 2,
   "temperature": 27.5,
   "fan": true,
@@ -156,9 +156,9 @@ Logged every 30 seconds for analytics, attendance records, and temperature trend
    * Click **S1 (Hasanul)**, then click **IR1** $\rightarrow$ **IR2**.
    * Look at Firebase: `studentCount` turns into `1`, `light` becomes `true` **in under 0.5 seconds**!
 5. **Test 2 — Teacher Enters and Leaves**:
-   * Tap **T (Sayma)** $\rightarrow$ **IR1** $\rightarrow$ **IR2**.
+   * Tap **T (Sayma Ma'am)** $\rightarrow$ **IR1** $\rightarrow$ **IR2**.
    * In Firebase: `teacherPresent` = `true`, `projector` = `true`.
-   * Tap **T (Sayma)** $\rightarrow$ **IR2** $\rightarrow$ **IR1** (Teacher exits).
+   * Tap **T (Sayma Ma'am)** $\rightarrow$ **IR2** $\rightarrow$ **IR1** (Teacher exits).
    * In Firebase: `teacherPresent` = `false`, `projector` = `false`, but **`light` remains `true`**!
 6. **Test 3 — Unknown Intruder Alert**:
    * Click **IR1** then **IR2** with no card tap (or click the grey **Unknown Card** button).
