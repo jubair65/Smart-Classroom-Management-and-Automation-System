@@ -67,6 +67,7 @@ const unsigned long IR_TIMEOUT_MS = 3000UL;  // 3s max between IR1 and IR2
 const unsigned long ALERT_MS      = 2500UL;  // Alert message duration
 const unsigned long PAGE_MS       = 3000UL;  // LCD page rotate
 const unsigned long TEMP_MS       = 1000UL;  // Temperature check interval
+const unsigned long DEBOUNCE_MS   = 50UL;    // Button debounce window
 
 // ---------------- USER REGISTRY ----------------
 struct Person {
@@ -96,6 +97,7 @@ IRState irState = IR_IDLE;
 unsigned long irT = 0;
 bool prevB1 = false, prevB2 = false;
 bool prevCard[5] = { true, true, true, true, true };
+unsigned long lastDebounce[5] = { 0, 0, 0, 0, 0 }; // Per-button debounce timestamps
 
 char alertL1[17] = "", alertL2[17] = "";
 unsigned long alertUntil = 0, lastPage = 0, lastRender = 0, lastTemp = 0;
@@ -124,7 +126,7 @@ void stampDate(char* out, size_t maxLen = 12) {
   if (getLocalTime(&timeinfo, 100)) {
     strftime(out, maxLen, "%Y-%m-%d", &timeinfo);
   } else {
-    strncpy(out, "2026-10-03", maxLen);
+    strncpy(out, "1970-01-01", maxLen); // NTP unavailable — neutral fallback
     out[maxLen - 1] = '\0';
   }
 }
@@ -137,15 +139,14 @@ void lcdLine(uint8_t row, const char* s) {
 }
 
 void beep(unsigned int ms, unsigned int freq) {
-  tone(PIN_BUZ, freq, ms);
-  delay(ms);
-  noTone(PIN_BUZ);
+  tone(PIN_BUZ, freq, ms); // tone() stops itself after ms via hardware timer — non-blocking
 }
 
 void alarmBeep() {
+  // Intentionally blocking — security alert must be fully heard
   for (uint8_t i = 0; i < 3; i++) {
-    beep(150, 2000);
-    delay(100);
+    tone(PIN_BUZ, 2000, 150);
+    delay(250); // 150ms tone + 100ms gap
   }
 }
 
@@ -220,7 +221,7 @@ void firebaseSyncLive() {
   snprintf(b, sizeof(b),
     "{\"teacherPresent\":%s,\"teacherName\":\"%s\",\"studentCount\":%d,\"unknownCount\":%d,\"temperature\":%d.%d,\"fan\":%s,\"light\":%s,\"ac\":%s,\"projector\":%s,\"time\":\"%s\",\"date\":\"%s\",\"lastUpdated\":\"%s %s\"}",
     teacherPresent ? "true" : "false",
-    teacherPresent ? "Sayma" : "",
+    teacherPresent ? people[0].name : "",
     studentCount,
     unknownCount,
     tempX10 / 10,
@@ -355,6 +356,14 @@ void onCard(uint8_t idx) {
     return;
   }
 
+  // Bug fix: don't overwrite a still-valid pending tap (within TAG_WINDOW_MS)
+  // Prevents a second card tap from "stealing" the door entry from the first person
+  if (pendingIdx >= 0 && (millis() - pendingTime) <= TAG_WINDOW_MS) {
+    showAlert("Wait — scan again", "after crossing!", 2000);
+    Serial.println(F("[CARD] Ignored — previous tap still pending."));
+    return;
+  }
+
   pendingIdx = idx;
   pendingTime = millis();
   showAlert(people[idx].isTeacher ? "Teacher card OK" : "Student card OK", people[idx].name, 2000);
@@ -410,9 +419,13 @@ void handleCrossing(bool entering) {
         p.inside = true;
         totalCount++;
 
-        // Rule: if total count > 0 then teacher is present, otherwise absent
-        teacherPresent = (totalCount > 0);
-        studentCount   = (totalCount > 1) ? (totalCount - 1) : 0;
+        // Only mark teacher present when the teacher's card was used to enter
+        if (p.isTeacher) teacherPresent = true;
+        // studentCount = people inside who are NOT the teacher
+        studentCount = 0;
+        for (uint8_t j = 0; j < 4; j++) {
+          if (!people[j].isTeacher && people[j].inside) studentCount++;
+        }
 
         showAlert(p.isTeacher ? "Teacher ENTERED" : "Student ENTERED", p.name, ALERT_MS);
         snprintf(m, sizeof(m), "%s entered, total=%d", p.name, totalCount);
@@ -437,8 +450,10 @@ void handleCrossing(bool entering) {
       logEvent("EXIT", "Last person left, room empty", false);
       beep(80, 1000);
     } else {
-      teacherPresent = true;
-      studentCount   = (totalCount > 1) ? (totalCount - 1) : 0;
+      // teacherPresent stays as-is — contactless exit means we can't tell who left
+      // (RFID is outside only, so teacher cannot tap out from inside — see Issue #3 note)
+      studentCount = totalCount - (teacherPresent ? 1 : 0);
+      if (studentCount < 0) studentCount = 0;
       snprintf(m, sizeof(m), "Person left, total=%d", totalCount);
       showAlert("Person LEFT", m, ALERT_MS);
       logEvent("EXIT", m, false);
@@ -496,11 +511,18 @@ void updateIR() {
   }
 }
 
-// Read the 5 on-screen Card Buttons
+// Read the 5 on-screen Card Buttons with debounce
 void updateCards() {
+  unsigned long nowMs = millis();
   for (uint8_t i = 0; i < 5; i++) {
-    bool now = (digitalRead(CARD_PINS[i]) == HIGH);
-    if (prevCard[i] && !now) onCard(i); // Active-LOW press
+    bool now = (digitalRead(CARD_PINS[i]) == HIGH); // HIGH = not pressed (active-LOW buttons)
+    // Detect falling edge (button just pressed) with debounce guard
+    if (prevCard[i] && !now) {
+      if (nowMs - lastDebounce[i] >= DEBOUNCE_MS) {
+        lastDebounce[i] = nowMs;
+        onCard(i);
+      }
+    }
     prevCard[i] = now;
   }
 }
