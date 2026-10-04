@@ -1,0 +1,57 @@
+# ==========================================
+# Root Git Ignore for Smart Classroom Simulation
+# ==========================================
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+/shelf/
+/workspace.xml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# ==========================================
+# Android Application Ignore Rules
+# ==========================================
+
+# Gradle files & caches
+.gradle/
+android_app/.gradle/
+build/
+android_app/build/
+android_app/*/build/
+android_app/app/build/
+
+# Local configuration file (SDK location, etc)
+local.properties
+android_app/local.properties
+
+# Android Studio & IntelliJ
+android_app/*.iml
+android_app/.idea/
+android_app/app/*.iml
+
+# Built artifacts & packages
+*.apk
+*.aar
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Native build
+.cxx/
+android_app/.cxx/
+android_app/*/.cxx/
+
+# Captures and logs
+captures/
+*.log
+
+# Keystores
+*.jks
+*.keystore
