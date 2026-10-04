@@ -89,6 +89,13 @@ int  totalCount = 0, studentCount = 0, unknownCount = 0;
 bool teacherPresent = false;
 bool fanOn = false, lightOn = false, acOn = false, projOn = false;
 
+struct StudentEntry {
+  uint8_t personIdx;
+  char enterTime[9];
+};
+StudentEntry activeStudents[4];
+uint8_t activeStudentCount = 0;
+
 int8_t pendingIdx = -1;
 unsigned long pendingTime = 0;
 
@@ -166,7 +173,7 @@ void firebasePut(const char* path, const char* jsonPayload) {
 
   HTTPClient https;
   https.setTimeout(3000);
-  https.setReuse(true);
+  https.setReuse(false); // Do not keep socket alive on temporary stack client
 
   String url = String(FIREBASE_URL) + path;
   if (strlen(FIREBASE_AUTH) > 0) {
@@ -175,6 +182,7 @@ void firebasePut(const char* path, const char* jsonPayload) {
 
   if (https.begin(client, url)) {
     https.addHeader("Content-Type", "application/json");
+    https.addHeader("Connection", "close");
     int code = https.PUT(jsonPayload);
     if (code > 0) {
       Serial.print(F("[FIREBASE PUT] -> HTTP ")); Serial.println(code);
@@ -183,6 +191,7 @@ void firebasePut(const char* path, const char* jsonPayload) {
     }
     https.end();
   }
+  client.stop(); // Immediately release lwIP socket and TCP buffer
 }
 
 
@@ -194,7 +203,7 @@ void firebasePost(const char* path, const char* jsonPayload) {
 
   HTTPClient https;
   https.setTimeout(3000);
-  https.setReuse(true);
+  https.setReuse(false); // Do not keep socket alive on temporary stack client
 
   String url = String(FIREBASE_URL) + path;
   if (strlen(FIREBASE_AUTH) > 0) {
@@ -203,6 +212,7 @@ void firebasePost(const char* path, const char* jsonPayload) {
 
   if (https.begin(client, url)) {
     https.addHeader("Content-Type", "application/json");
+    https.addHeader("Connection", "close");
     int code = https.POST(jsonPayload);
     if (code > 0) {
       Serial.print(F("[FIREBASE POST] -> HTTP ")); Serial.println(code);
@@ -211,15 +221,31 @@ void firebasePost(const char* path, const char* jsonPayload) {
     }
     https.end();
   }
+  client.stop(); // Immediately release lwIP socket and TCP buffer
 }
 
 
 void firebaseSyncLive() {
   char ts[9]; stamp(ts);
   char dt[12]; stampDate(dt);
-  char b[340];
+
+  // Format students array in descending order of entry (most recently entered first)
+  char studentsJson[260] = "[";
+  for (int i = (int)activeStudentCount - 1; i >= 0; i--) {
+    uint8_t pIdx = activeStudents[i].personIdx;
+    char item[64];
+    snprintf(item, sizeof(item), "{\"name\":\"%s\",\"enterTime\":\"%s\"}%s",
+      people[pIdx].name,
+      activeStudents[i].enterTime,
+      (i > 0) ? "," : ""
+    );
+    strncat(studentsJson, item, sizeof(studentsJson) - strlen(studentsJson) - 1);
+  }
+  strncat(studentsJson, "]", sizeof(studentsJson) - strlen(studentsJson) - 1);
+
+  char b[600];
   snprintf(b, sizeof(b),
-    "{\"teacherPresent\":%s,\"teacherName\":\"%s\",\"studentCount\":%d,\"unknownCount\":%d,\"temperature\":%d.%d,\"fan\":%s,\"light\":%s,\"ac\":%s,\"projector\":%s,\"time\":\"%s\",\"date\":\"%s\",\"lastUpdated\":\"%s %s\"}",
+    "{\"teacherPresent\":%s,\"teacherName\":\"%s\",\"studentCount\":%d,\"unknownCount\":%d,\"temperature\":%d.%d,\"fan\":%s,\"light\":%s,\"ac\":%s,\"projector\":%s,\"time\":\"%s\",\"date\":\"%s\",\"lastUpdated\":\"%s %s\",\"students\":%s}",
     teacherPresent ? "true" : "false",
     teacherPresent ? people[0].name : "",
     studentCount,
@@ -233,7 +259,8 @@ void firebaseSyncLive() {
     ts,
     dt,
     dt,
-    ts
+    ts,
+    studentsJson
   );
   firebasePut("/classroom/live.json", b);
 }
@@ -293,7 +320,7 @@ void readTemperature() {
   float t = dht.readTemperature();
   if (!isnan(t)) {
     int newTemp = (int)(t * 10.0f);
-    if (abs(newTemp - tempX10) >= 2) { // 0.2°C change triggers fast live sync
+    if (abs(newTemp - tempX10) >= 5) { // 0.5°C change triggers live sync, avoiding micro-jitter spam
       dirtyLive = true;
     }
     tempX10 = newTemp;
@@ -420,12 +447,19 @@ void handleCrossing(bool entering) {
         totalCount++;
 
         // Only mark teacher present when the teacher's card was used to enter
-        if (p.isTeacher) teacherPresent = true;
-        // studentCount = people inside who are NOT the teacher
-        studentCount = 0;
-        for (uint8_t j = 0; j < 4; j++) {
-          if (!people[j].isTeacher && people[j].inside) studentCount++;
+        if (p.isTeacher) {
+          teacherPresent = true;
+        } else {
+          // Record student into activeStudents stack with entrance timestamp
+          if (activeStudentCount < 4) {
+            char ts[9]; stamp(ts);
+            activeStudents[activeStudentCount].personIdx = pendingIdx;
+            strncpy(activeStudents[activeStudentCount].enterTime, ts, sizeof(activeStudents[activeStudentCount].enterTime));
+            activeStudents[activeStudentCount].enterTime[sizeof(activeStudents[activeStudentCount].enterTime) - 1] = '\0';
+            activeStudentCount++;
+          }
         }
+        studentCount = activeStudentCount;
 
         showAlert(p.isTeacher ? "Teacher ENTERED" : "Student ENTERED", p.name, ALERT_MS);
         snprintf(m, sizeof(m), "%s entered, total=%d", p.name, totalCount);
@@ -443,6 +477,7 @@ void handleCrossing(bool entering) {
       teacherPresent = false;
       studentCount   = 0;
       unknownCount   = 0; // Reset unknown counter when room is fully vacated
+      activeStudentCount = 0;
       for (uint8_t i = 0; i < 4; i++) {
         people[i].inside = false; // Reset inside flags for clean re-entry
       }
@@ -450,10 +485,14 @@ void handleCrossing(bool entering) {
       logEvent("EXIT", "Last person left, room empty", false);
       beep(80, 1000);
     } else {
-      // teacherPresent stays as-is — contactless exit means we can't tell who left
-      // (RFID is outside only, so teacher cannot tap out from inside — see Issue #3 note)
-      studentCount = totalCount - (teacherPresent ? 1 : 0);
-      if (studentCount < 0) studentCount = 0;
+      // While leaving the class, decrease students from descending order (LIFO - latest entered leaves first)
+      if (activeStudentCount > 0) {
+        activeStudentCount--;
+        uint8_t leavingIdx = activeStudents[activeStudentCount].personIdx;
+        people[leavingIdx].inside = false; // Mark student as outside so they can re-enter cleanly!
+      }
+      studentCount = activeStudentCount;
+
       snprintf(m, sizeof(m), "Person left, total=%d", totalCount);
       showAlert("Person LEFT", m, ALERT_MS);
       logEvent("EXIT", m, false);
@@ -672,6 +711,16 @@ void loop() {
   updateCards();
   updateIR();
 
+  // Auto-reconnect if Wi-Fi momentarily drops
+  static unsigned long lastWifiCheck = 0;
+  if (millis() - lastWifiCheck >= 10000UL) {
+    lastWifiCheck = millis();
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println(F("[WIFI] Reconnecting..."));
+      WiFi.reconnect();
+    }
+  }
+
   if (millis() - lastTemp >= TEMP_MS) {
     lastTemp = millis();
     readTemperature();
@@ -683,15 +732,15 @@ void loop() {
     renderLCD();
   }
 
-  // Fast Live Synchronization (sub-second responsiveness for app)
-  if ((dirtyLive && (millis() - lastLiveSync >= 200)) || (millis() - lastLiveSync >= 10000UL)) {
+  // Fast Live Synchronization (sub-second responsiveness for card taps & door crossings)
+  if ((dirtyLive && (millis() - lastLiveSync >= 500)) || (millis() - lastLiveSync >= 30000UL)) {
     firebaseSyncLive();
     dirtyLive = false;
     lastLiveSync = millis();
   }
 
-  // Controlled periodic history snapshots (every 15s or on major events)
-  if ((dirtyHistory && (millis() - lastHistorySync >= 1000)) || (millis() - lastHistorySync >= 15000UL)) {
+  // Periodic history snapshots (only on meaningful classroom events, or 60s background heartbeat)
+  if ((dirtyHistory && (millis() - lastHistorySync >= 1500)) || (millis() - lastHistorySync >= 60000UL)) {
     firebasePushHistory();
     dirtyHistory = false;
     lastHistorySync = millis();

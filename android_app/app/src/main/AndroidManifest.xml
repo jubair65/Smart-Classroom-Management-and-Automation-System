@@ -28,6 +28,11 @@
             android:exported="false"
             android:theme="@style/Theme.SmartClassroom.NoActionBar" />
 
+        <activity
+            android:name=".ui.students.StudentsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SmartClassroom.NoActionBar" />
+
     </application>
 
 </manifest>

@@ -16,5 +16,6 @@ data class ClassroomLive(
     val date: String = "",
     val time: String = "",
     val lastUpdated: String = "",
-    val timestamp: Long = 0L
+    val timestamp: Long = 0L,
+    val students: List<StudentItem> = emptyList()
 )

@@ -1,6 +1,7 @@
 package com.uap.cse316.smartclassroom.ui.dashboard
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.media.AudioManager
 import android.media.RingtoneManager
@@ -25,6 +26,7 @@ import com.google.firebase.database.ValueEventListener
 import com.uap.cse316.smartclassroom.R
 import com.uap.cse316.smartclassroom.data.model.ClassroomLive
 import com.uap.cse316.smartclassroom.databinding.FragmentDashboardBinding
+import com.uap.cse316.smartclassroom.ui.students.StudentsActivity
 import com.uap.cse316.smartclassroom.utils.FirebaseManager
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -56,6 +58,12 @@ class DashboardFragment : Fragment() {
         binding.swipeRefresh.setOnRefreshListener {
             updateLocalHeaderTime()
             binding.swipeRefresh.isRefreshing = false
+        }
+
+        // Clicking on Students card opens the Students list window
+        binding.cardStudents.setOnClickListener {
+            val intent = Intent(requireContext(), StudentsActivity::class.java)
+            startActivity(intent)
         }
 
         // Clicking on Unknown card navigates to Alerts tab
