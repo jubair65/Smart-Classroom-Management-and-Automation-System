@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Classroom — 3D Physical Prototype & Component Placement Guide</title>
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --card-bg: rgba(16, 24, 39, 0.85);
+      --card-border: rgba(56, 189, 248, 0.2);
+      --accent-blue: #38bdf8;
+      --accent-cyan: #06b6d4;
+      --accent-gold: #f59e0b;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+    }
+
+    #webgl-container {
+      flex: 1;
+      height: 100%;
+      position: relative;
+    }
+
+    /* Top Floating Header */
+    .top-bar {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: auto;
+    }
+
+    .top-bar h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .top-bar p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Floating View Controls */
+    .controls-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--text-main);
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateY(-1px);
+    }
+
+    .btn.active {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* Right Inspection Sidebar */
+    .sidebar {
+      width: 380px;
+      height: 100%;
+      background: var(--card-bg);
+      border-left: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .tag-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-zone1 { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-zone2 { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-zone3 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    .sidebar-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+
+    .info-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .info-card h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-cyan);
+      margin-bottom: 6px;
+    }
+
+    .info-card p, .info-card ul {
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .info-card ul {
+      padding-left: 18px;
+    }
+
+    .pin-pill {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent-blue);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.78rem;
+      margin: 2px 2px 2px 0;
+    }
+
+    .mistake-warning {
+      border-left: 3px solid var(--accent-red);
+      background: rgba(239, 68, 68, 0.08);
+      padding: 8px 12px;
+      border-radius: 0 8px 8px 0;
+      color: #fca5a5;
+      font-size: 0.8rem;
+    }
+
+    /* Tooltip overlay in 3D canvas */
+    #hover-tooltip {
+      position: absolute;
+      display: none;
+      z-index: 15;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--accent-blue);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      transform: translate(-50%, -120%);
+    }
+
+    /* Legend Overlay */
+    .legend-box {
+      position: absolute;
+      top: 16px;
+      right: 400px;
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    @media (max-width: 900px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; height: 35vh; }
+      .legend-box { display: none; }
+    }
+  </style>
+  <!-- Three.js + OrbitControls via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="webgl-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <h1>🏫 Smart Classroom 3D Prototype Builder</h1>
+      <p>Interactive 3D Physical Placement, Dimensioning & Wire Routing Architecture</p>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend-box">
+      <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">Zone Architecture</div>
+      <div class="legend-item"><div class="dot" style="background:#ef4444;"></div> Zone 1: Entrance Portal (RFID + IR Door)</div>
+      <div class="legend-item"><div class="dot" style="background:#f59e0b;"></div> Zone 2: Ceiling & Appliances (LCD, Fan, LEDs)</div>
+      <div class="legend-item"><div class="dot" style="background:#38bdf8;"></div> Zone 3: Control Brain (ESP32, Relay, DHT22)</div>
+    </div>
+
+    <!-- Floating 3D Controls -->
+    <div class="controls-panel">
+      <button class="btn active" onclick="setCameraView('iso')">🌐 3D Isometric</button>
+      <button class="btn" onclick="setCameraView('door')">🚪 Zone 1: Doorway</button>
+      <button class="btn" onclick="setCameraView('control')">🧠 Zone 3: Control Box</button>
+      <button class="btn" onclick="setCameraView('top')">📐 Top-Down Blueprint</button>
+      <button class="btn" onclick="toggleFan()"><span id="fan-btn-icon">⚡</span> Toggle Fan</button>
+      <button class="btn" onclick="toggleLEDs()">💡 Toggle LEDs</button>
+      <button class="btn" onclick="resetSelection()">🔄 Reset View</button>
+    </div>
+
+    <div id="hover-tooltip">Component Name</div>
+  </div>
+
+  <!-- Component Inspection Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div>
+        <h2 id="comp-title">ESP32 DevKit V1 (30-pin)</h2>
+        <span id="comp-category" class="tag-badge badge-zone3">Master Controller</span>
+      </div>
+    </div>
+    <div class="sidebar-content">
+      <div class="info-card">
+        <h4>Optimal Spatial Placement</h4>
+        <p id="comp-placement">Mounted on the 30-pin expansion breakout board inside the main control enclosure (Zone 3), placed at the bottom-right corner of the prototype baseboard.</p>
+      </div>
+
+      <div class="info-card">
+        <h4>Why This Placement Is Most Efficient</h4>
+        <p id="comp-rationale">Centrally positions the microcontroller within 15–20cm of all sensors and actuators. Keeps SPI bus for RFID short while isolating the ESP32 logic from high-current relay switching.</p>
+      </div>
+
+      <div class="info-card">
+        <h4>Hardware Connections</h4>
+        <div id="comp-pins">
+          <span class="pin-pill">VIN → 5V</span>
+          <span class="pin-pill">GND → Common GND</span>
+          <span class="pin-pill">3V3 → 3.3V Rail</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h4>Engineering Advice & Mistakes to Avoid</h4>
+        <div class="mistake-warning" id="comp-mistake">
+          Ensure correct antenna orientation facing outwards away from metal/enclosure walls to maintain maximum 2.4GHz Wi-Fi reception for Firebase Realtime Database updates.
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    // -------------------------------------------------------------
+    // THREE.JS SCENE SETUP
+    // -------------------------------------------------------------
+    const container = document.getElementById('webgl-container');
+    const tooltip = document.getElementById('hover-tooltip');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0e17);
+    scene.fog = new THREE.FogExp2(0x0a0e17, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(45, 38, 50);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05; // don't go below floor
+    controls.target.set(0, 4, 0);
+
+    // -------------------------------------------------------------
+    // LIGHTING
+    // -------------------------------------------------------------
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(30, 50, 40);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 150;
+    dirLight.shadow.camera.left = -35;
+    dirLight.shadow.camera.right = 35;
+    dirLight.shadow.camera.top = 35;
+    dirLight.shadow.camera.bottom = -35;
+    scene.add(dirLight);
+
+    // Accent soft lights
+    const bluePoint = new THREE.PointLight(0x38bdf8, 1.5, 30);
+    bluePoint.position.set(15, 12, 10);
+    scene.add(bluePoint);
+
+    // -------------------------------------------------------------
+    // COMPONENT DATABASE FOR INTERACTIVE INSPECTOR
+    // -------------------------------------------------------------
+    const COMPONENT_DATA = {
+      esp32: {
+        title: "ESP32 DevKit V1 (30-pin)",
+        category: "Master Controller",
+        badge: "badge-zone3",
+        placement: "Mounted directly into the 30-pin Expansion Breakout Board inside the Master Control Enclosure (Zone 3, bottom-right of baseboard).",
+        rationale: "Positioning the ESP32 in a dedicated control box isolates sensitive 3.3V logic signals from magnetic motor interference. The 30-pin model fits standard breakout boards while leaving GPIO lines clean.",
+        pins: ["GPIO 21/22 (I2C)", "GPIO 5/4/18/19/23 (SPI)", "GPIO 26/14/13/17 (Relays)", "GPIO 32/33 (IR)", "GPIO 27 (DHT)", "GPIO 25 (Buzzer)"],
+        mistake: "Do NOT use pins GPIO 6–11 (connected to internal SPI flash). Antenna must face the exterior acrylic wall for strong 2.4GHz Wi-Fi signal."
+      },
+      expansion: {
+        title: "ESP32 30-Pin Expansion Shield",
+        category: "Power & Breakout Hub",
+        badge: "badge-zone3",
+        placement: "Directly under the ESP32 inside the control box. Features dual power rails and screw/pin breakout terminals.",
+        rationale: "Solves the critical issue where ESP32 only has 1 VIN and 1-2 GND pins. Provides 3-pin (Signal, VCC, GND) connection headers for every GPIO pin, eliminating 90% of messy breadboard jumpers.",
+        pins: ["DC Barrel Jack (6-12V in)", "VCC Selectable Rail (5V / 3.3V)", "Dedicated GND Rail"],
+        mistake: "Ensure the jumper selects 3.3V for sensor banks (RFID) and 5V for Relay and LCD banks to avoid logic voltage blowout."
+      },
+      rfid: {
+        title: "MFRC522 RFID Card Reader",
+        category: "Attendance & Access",
+        badge: "badge-zone1",
+        placement: "Mounted on the OUTSIDE face of the Entrance Door Frame at a height of 8–10 cm (ergonomic tap height for miniature model).",
+        rationale: "Allows students and teacher to tap cards BEFORE crossing the entry threshold. Direction logic requires RFID tap followed by outside-to-inside motion (IR1 → IR2).",
+        pins: ["3.3V (VCC)", "GND", "RST (GPIO 4)", "SDA (GPIO 5)", "SCK (GPIO 18)", "MISO (GPIO 19)", "MOSI (GPIO 23)"],
+        mistake: "CRITICAL: Connect ONLY to 3.3V! Connecting to 5V will permanently burn the chip. Keep SPI wire length strictly under 20cm to prevent packet loss."
+      },
+      ir1: {
+        title: "IR Sensor 1 (Outside / Entry)",
+        category: "Direction & Headcount",
+        badge: "badge-zone1",
+        placement: "Mounted on the outer jamb of the doorway entrance, pointing horizontally across the door opening, 12cm before IR Sensor 2.",
+        rationale: "Acts as the first trigger during entry (IR1 → IR2) and the final trigger during exit (IR2 → IR1). 12cm separation guarantees accurate human movement sequence detection without overlapping triggers.",
+        pins: ["VCC (3.3V)", "GND", "OUT (GPIO 32)"],
+        mistake: "Calibrate the blue potentiometer on the sensor board so ambient classroom light or sunlight doesn't cause false 'always-LOW' detections."
+      },
+      ir2: {
+        title: "IR Sensor 2 (Inside / Exit)",
+        category: "Direction & Headcount",
+        badge: "badge-zone1",
+        placement: "Mounted on the inner jamb of the doorway entrance, pointing horizontally across the path, 12cm after IR Sensor 1.",
+        rationale: "Enables 'Contactless Free Exit'. When people leave, stepping through IR2 then IR1 decrements total headcount without needing an RFID tap.",
+        pins: ["VCC (3.3V)", "GND", "OUT (GPIO 33)"],
+        mistake: "Do NOT wire IR1 and IR2 to 5V; the ESP32 GPIO inputs expect 3.3V logic. Always power IR sensors from the 3.3V rail."
+      },
+      lcd: {
+        title: "16×2 Character LCD with I2C Module",
+        category: "Live Status Dashboard",
+        badge: "badge-zone2",
+        placement: "Mounted prominently on the top classroom display panel / front interior wall where it is immediately readable.",
+        rationale: "Displays real-time temperature, humidity, total headcount, teacher presence status, and real-time RFID scan alerts (e.g., 'Welcome Jubair' or 'UNKNOWN CARD').",
+        pins: ["VCC (5V VIN)", "GND", "SDA (GPIO 21)", "SCL (GPIO 22)"],
+        mistake: "Adjust the small blue potentiometer on the back I2C backpack with a screwdriver to tune text contrast if characters are dim."
+      },
+      fan: {
+        title: "5V DC Cooling Fan (40×40mm)",
+        category: "Classroom Actuator CH1",
+        badge: "badge-zone2",
+        placement: "Mounted centered in the classroom ceiling / ventilation aperture pointing downward.",
+        rationale: "Visibly demonstrates automated climate control. Firmware activates fan when temperature reaches ≥27.0°C and someone is inside.",
+        pins: ["Relay CH1 (NO)", "ESP32 VIN (5V)", "Common GND"],
+        mistake: "CRITICAL: You MUST solder/screw a 1N4007 flyback diode across the fan terminals (silver cathode stripe to +). Omitting this will reset the ESP32!"
+      },
+      relay: {
+        title: "4-Channel 5V Relay Board",
+        category: "Power Switching Module",
+        badge: "badge-zone3",
+        placement: "Inside the Control Enclosure, directly above the mini breadboard, securely screwed onto the base.",
+        rationale: "Opto-isolated relays switch higher-current appliances safely without drawing more than 2mA from ESP32 GPIOs: CH1 (Fan), CH2 (Light), CH3 (AC), CH4 (Projector).",
+        pins: ["VCC (5V)", "GND", "IN1 (GPIO 26)", "IN2 (GPIO 14)", "IN3 (GPIO 13)", "IN4 (GPIO 17)"],
+        mistake: "Most 4-channel boards are ACTIVE LOW (relay turns ON when pin goes LOW). Ensure your firmware logic matches the relay trigger type."
+      },
+      dht22: {
+        title: "DHT22 Digital Temp & Humidity Sensor",
+        category: "Environmental Sensor",
+        badge: "badge-zone3",
+        placement: "Mounted at the air intake border of the classroom/control box, isolated from warm components.",
+        rationale: "Must measure genuine ambient air. Placing it too close to the warm ESP32 chip or relay coils will skew temperature readings upward by 2–3°C.",
+        pins: ["Pin 1: VCC (3.3V)", "Pin 2: DATA (GPIO 27)", "Pin 4: GND"],
+        mistake: "Do NOT substitute with a DHT11 — the DHT11 only has 1°C resolution, making the precise 27.0°C / 25.5°C automation thresholds erratic."
+      },
+      buzzer: {
+        title: "5V Active Buzzer",
+        category: "Audio Feedback Alarm",
+        badge: "badge-zone3",
+        placement: "Inside control box top face with sound aperture exposed outward.",
+        rationale: "Provides short feedback beeps on valid card scans, and loud continuous pulsed alarm siren on 'Unknown Card' or unauthorized intrusion attempts.",
+        pins: ["(+) Long leg → GPIO 25", "(-) Short leg → GND"],
+        mistake: "Must be an ACTIVE buzzer (with built-in oscillator). A passive buzzer will make only tiny clicks without complex PWM tones."
+      },
+      leds: {
+        title: "Appliance Prototype LEDs (Yellow, Blue, White)",
+        category: "Output Indicators",
+        badge: "badge-zone2",
+        placement: "Mounted neatly in a row on the 170-point Mini Breadboard or front bezel display panel.",
+        rationale: "Clear visual representation of automated room loads: Yellow = Room Light (CH2), Blue = AC Compressor (CH3), White = Smart Projector (CH4).",
+        pins: ["Relay CH2/3/4 (NO) → 220Ω Resistor → LED Anode", "LED Cathode → GND"],
+        mistake: "Never connect LEDs directly to 5V without the 220Ω current limiting resistor, or the LEDs will burn out instantly."
+      }
+    };
+
+    // -------------------------------------------------------------
+    // BUILD 3D GEOMETRY
+    // -------------------------------------------------------------
+    const clickableObjects = [];
+
+    // 1. Baseboard Workbench Platform (Wood / Dark Acrylic)
+    const baseGeo = new THREE.BoxGeometry(54, 1.8, 38);
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, metalness: 0.1 });
+    const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+    baseMesh.position.set(0, -0.9, 0);
+    baseMesh.receiveShadow = true;
+    scene.add(baseMesh);
+
+    // Floor Grid texture
+    const grid = new THREE.GridHelper(52, 26, 0x38bdf8, 0x1e293b);
+    grid.position.y = 0.02;
+    scene.add(grid);
+
+    // Zone 1: Entrance Portal Base Border
+    const zone1Border = new THREE.BoxGeometry(18, 0.1, 26);
+    const zone1Mat = new THREE.MeshBasicMaterial({ color: 0xef4444, wireframe: true, transparent: true, opacity: 0.25 });
+    const zone1Mesh = new THREE.Mesh(zone1Border, zone1Mat);
+    zone1Mesh.position.set(-16, 0.05, -2);
+    scene.add(zone1Mesh);
+
+    // Zone 2: Classroom Room Base Border
+    const zone2Border = new THREE.BoxGeometry(24, 0.1, 26);
+    const zone2Mat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, wireframe: true, transparent: true, opacity: 0.25 });
+    const zone2Mesh = new THREE.Mesh(zone2Border, zone2Mat);
+    zone2Mesh.position.set(5, 0.05, -2);
+    scene.add(zone2Mesh);
+
+    // Zone 3: Control Brain Enclosure Base
+    const zone3Border = new THREE.BoxGeometry(24, 0.1, 10);
+    const zone3Mat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.25 });
+    const zone3Mesh = new THREE.Mesh(zone3Border, zone3Mat);
+    zone3Mesh.position.set(5, 0.05, 12);
+    scene.add(zone3Mesh);
+
+    // -------------------------------------------------------------
+    // DOORWAY & ENTRANCE (ZONE 1)
+    // -------------------------------------------------------------
+    const doorFrameGroup = new THREE.Group();
+    doorFrameGroup.position.set(-15, 0, 4);
+
+    // Door Jambs (Light wood)
+    const jambMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 });
+    const postGeo = new THREE.BoxGeometry(1.2, 14, 1.2);
+    
+    // Outer post
+    const post1 = new THREE.Mesh(postGeo, jambMat);
+    post1.position.set(-3.5, 7, 0);
+    post1.castShadow = true;
+    doorFrameGroup.add(post1);
+
+    // Inner post
+    const post2 = new THREE.Mesh(postGeo, jambMat);
+    post2.position.set(3.5, 7, 0);
+    post2.castShadow = true;
+    doorFrameGroup.add(post2);
+
+    // Lintel header
+    const lintelGeo = new THREE.BoxGeometry(8.2, 1.2, 1.2);
+    const lintel = new THREE.Mesh(lintelGeo, jambMat);
+    lintel.position.set(0, 13.4, 0);
+    lintel.castShadow = true;
+    doorFrameGroup.add(lintel);
+
+    // Door leaf slightly ajar
+    const doorLeafGeo = new THREE.BoxGeometry(6.6, 12.8, 0.4);
+    const doorLeafMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7, transparent: true, opacity: 0.7 });
+    const doorLeaf = new THREE.Mesh(doorLeafGeo, doorLeafMat);
+    doorLeaf.position.set(1.5, 6.4, -1.8);
+    doorLeaf.rotation.y = 0.55;
+    doorFrameGroup.add(doorLeaf);
+
+    scene.add(doorFrameGroup);
+
+    // RFID Reader (MFRC522 Blue PCB)
+    const rfidGroup = new THREE.Group();
+    rfidGroup.position.set(-19.2, 7.5, 4.2);
+    const rfidPcb = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 4.2, 3),
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.3, metalness: 0.2 })
+    );
+    rfidPcb.castShadow = true;
+    rfidGroup.add(rfidPcb);
+    // Antenna coil ring graphic
+    const rfidCoil = new THREE.Mesh(
+      new THREE.RingGeometry(0.7, 1.0, 16),
+      new THREE.MeshBasicMaterial({ color: 0xd97706, side: THREE.DoubleSide })
+    );
+    rfidCoil.rotation.y = -Math.PI / 2;
+    rfidCoil.position.x = -0.16;
+    rfidGroup.add(rfidCoil);
+
+    rfidGroup.userData = { id: 'rfid', name: 'MFRC522 RFID Module (Outside Door)' };
+    scene.add(rfidGroup);
+    clickableObjects.push(rfidPcb);
+
+    // IR Sensor 1 (Outside / Entry)
+    const ir1Group = new THREE.Group();
+    ir1Group.position.set(-15, 3.5, 6.5);
+    const ir1Pcb = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.8, 3.2),
+      new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.5 })
+    );
+    ir1Group.add(ir1Pcb);
+    // IR LED emitter & receiver pair
+    const ledGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.6, 12);
+    const irEmit = new THREE.Mesh(ledGeo, new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+    irEmit.rotation.x = Math.PI / 2;
+    irEmit.position.set(-0.4, 0, -1.8);
+    const irRecv = new THREE.Mesh(ledGeo, new THREE.MeshBasicMaterial({ color: 0x1e293b }));
+    irRecv.rotation.x = Math.PI / 2;
+    irRecv.position.set(0.4, 0, -1.8);
+    ir1Group.add(irEmit);
+    ir1Group.add(irRecv);
+    
+    // Beam visualization line
+    const beam1Geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-1.8), new THREE.Vector3(0,0,-9)]);
+    const beam1Line = new THREE.Line(beam1Geo, new THREE.LineDashedMaterial({ color: 0xef4444, dashSize: 0.5, gapSize: 0.3 }));
+    beam1Line.computeLineDistances();
+    ir1Group.add(beam1Line);
+
+    ir1Group.userData = { id: 'ir1', name: 'IR Sensor 1 (Outer Entrance Trigger)' };
+    scene.add(ir1Group);
+    clickableObjects.push(ir1Pcb);
+
+    // IR Sensor 2 (Inside / Exit - 12cm distance)
+    const ir2Group = new THREE.Group();
+    ir2Group.position.set(-15, 3.5, -2.5);
+    const ir2Pcb = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.8, 3.2),
+      new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.5 })
+    );
+    ir2Group.add(ir2Pcb);
+    const irEmit2 = irEmit.clone();
+    const irRecv2 = irRecv.clone();
+    ir2Group.add(irEmit2);
+    ir2Group.add(irRecv2);
+
+    const beam2Geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-1.8), new THREE.Vector3(0,0,-9)]);
+    const beam2Line = new THREE.Line(beam2Geo, new THREE.LineDashedMaterial({ color: 0xef4444, dashSize: 0.5, gapSize: 0.3 }));
+    beam2Line.computeLineDistances();
+    ir2Group.add(beam2Line);
+
+    ir2Group.userData = { id: 'ir2', name: 'IR Sensor 2 (Inner Exit Trigger)' };
+    scene.add(ir2Group);
+    clickableObjects.push(ir2Pcb);
+
+    // -------------------------------------------------------------
+    // CLASSROOM CEILING & DASHBOARD WALL (ZONE 2)
+    // -------------------------------------------------------------
+    const classroomGroup = new THREE.Group();
+    classroomGroup.position.set(5, 0, -2);
+
+    // Transparent acrylic room perimeter
+    const wallMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.15,
+      roughness: 0.1,
+      transmission: 0.9,
+      thickness: 0.5
+    });
+
+    // Back wall
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(24, 15, 0.4), wallMat);
+    backWall.position.set(0, 7.5, -13);
+    classroomGroup.add(backWall);
+
+    // Right wall
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 15, 26), wallMat);
+    rightWall.position.set(12, 7.5, 0);
+    classroomGroup.add(rightWall);
+
+    // Ceiling Mount Beam (for Fan & LCD)
+    const ceilingBeam = new THREE.Mesh(
+      new THREE.BoxGeometry(24, 1.0, 10),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 })
+    );
+    ceilingBeam.position.set(0, 14.5, 0);
+    classroomGroup.add(ceilingBeam);
+
+    // 16x2 LCD Character Display
+    const lcdGroup = new THREE.Group();
+    lcdGroup.position.set(3, 11, -12.5);
+
+    const lcdFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(8.5, 3.8, 0.8),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3 })
+    );
+    lcdGroup.add(lcdFrame);
+
+    // LCD Glowing Screen
+    const lcdScreen = new THREE.Mesh(
+      new THREE.BoxGeometry(7.2, 2.6, 0.1),
+      new THREE.MeshBasicMaterial({ color: 0x1e40af })
+    );
+    lcdScreen.position.z = 0.42;
+    lcdGroup.add(lcdScreen);
+
+    // Screen text simulation
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(0, 0, 256, 128);
+    ctx.font = '24px monospace';
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillText('TEMP: 26.8C', 18, 48);
+    ctx.fillText('HEADCOUNT: 04', 18, 92);
+    const lcdTex = new THREE.CanvasTexture(canvas);
+    const textMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(6.8, 2.2),
+      new THREE.MeshBasicMaterial({ map: lcdTex, transparent: true })
+    );
+    textMesh.position.z = 0.44;
+    lcdGroup.add(textMesh);
+
+    lcdGroup.userData = { id: 'lcd', name: '16x2 I2C LCD Display' };
+    classroomGroup.add(lcdGroup);
+    clickableObjects.push(lcdFrame);
+
+    // 5V DC Fan (Mounted on Ceiling)
+    const fanGroup = new THREE.Group();
+    fanGroup.position.set(-4, 13.8, 0);
+
+    const fanShroud = new THREE.Mesh(
+      new THREE.BoxGeometry(4.4, 1.2, 4.4),
+      new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 })
+    );
+    fanGroup.add(fanShroud);
+
+    // Fan Blades Hub
+    const fanRotor = new THREE.Group();
+    const fanHub = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 0.8, 0.6, 16),
+      new THREE.MeshStandardMaterial({ color: 0x374151 })
+    );
+    fanRotor.add(fanHub);
+
+    // 4 curved blades
+    for (let i = 0; i < 4; i++) {
+      const blade = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 0.1, 0.7),
+        new THREE.MeshStandardMaterial({ color: 0x4b5563 })
+      );
+      blade.position.x = 1.0 * Math.cos((i * Math.PI) / 2);
+      blade.position.z = 1.0 * Math.sin((i * Math.PI) / 2);
+      blade.rotation.y = -(i * Math.PI) / 2;
+      blade.rotation.z = 0.35;
+      fanRotor.add(blade);
+    }
+    fanGroup.add(fanRotor);
+
+    fanGroup.userData = { id: 'fan', name: '5V DC Cooling Fan (Relay CH1)' };
+    classroomGroup.add(fanGroup);
+    clickableObjects.push(fanShroud);
+
+    // Appliance Prototype Indicator LEDs (Yellow, Blue, White)
+    const ledHolder = new THREE.Group();
+    ledHolder.position.set(3, 7.5, -12.6);
+
+    const ledColors = [
+      { id: 'led_yellow', col: 0xfacc15, name: 'Yellow LED (Room Light CH2)', x: -2.0 },
+      { id: 'led_blue',   col: 0x38bdf8, name: 'Blue LED (AC Unit CH3)', x: 0.0 },
+      { id: 'led_white',  col: 0xffffff, name: 'White LED (Projector CH4)', x: 2.0 }
+    ];
+
+    const ledMeshes = [];
+    const ledLights = [];
+
+    ledColors.forEach(item => {
+      const ledMat = new THREE.MeshStandardMaterial({
+        color: item.col,
+        emissive: item.col,
+        emissiveIntensity: 0.8,
+        roughness: 0.2
+      });
+      const ledM = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), ledMat);
+      ledM.position.set(item.x, 0, 0.4);
+      ledHolder.add(ledM);
+
+      const pLight = new THREE.PointLight(item.col, 0.8, 5);
+      pLight.position.set(item.x, 0, 1.2);
+      ledHolder.add(pLight);
+
+      ledMeshes.push(ledM);
+      ledLights.push(pLight);
+      clickableObjects.push(ledM);
+      ledM.userData = { id: 'leds', name: item.name };
+    });
+
+    classroomGroup.add(ledHolder);
+    scene.add(classroomGroup);
+
+    // -------------------------------------------------------------
+    // MASTER CONTROL ENCLOSURE (ZONE 3)
+    // -------------------------------------------------------------
+    const controlBoxGroup = new THREE.Group();
+    controlBoxGroup.position.set(5, 0, 12);
+
+    // Acrylic/wood casing
+    const boxBase = new THREE.Mesh(
+      new THREE.BoxGeometry(23.5, 3.2, 9.6),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 })
+    );
+    boxBase.position.y = 1.6;
+    boxBase.castShadow = true;
+    controlBoxGroup.add(boxBase);
+
+    // 1. ESP32 30-Pin Expansion Board (Black PCB)
+    const expBoardMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(8.5, 0.4, 6.5),
+      new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.3, metalness: 0.3 })
+    );
+    expBoardMesh.position.set(-6.5, 3.4, 0);
+    expBoardMesh.userData = { id: 'expansion', name: 'ESP32 30-Pin Expansion Breakout Board' };
+    controlBoxGroup.add(expBoardMesh);
+    clickableObjects.push(expBoardMesh);
+
+    // ESP32 NodeMCU plugged into shield
+    const esp32Mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(5.2, 0.6, 2.8),
+      new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.2 })
+    );
+    esp32Mesh.position.set(-6.5, 3.9, 0);
+    // Metal RF shield can
+    const rfCan = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 0.3, 1.8),
+      new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 })
+    );
+    rfCan.position.set(-0.8, 0.4, 0);
+    esp32Mesh.add(rfCan);
+    esp32Mesh.userData = { id: 'esp32', name: 'ESP32 DevKit V1 (30-pin Microcontroller)' };
+    controlBoxGroup.add(esp32Mesh);
+    clickableObjects.push(esp32Mesh);
+
+    // 2. 4-Channel Blue Relay Module
+    const relayGroup = new THREE.Group();
+    relayGroup.position.set(1.5, 3.4, 0);
+    const relayPcb = new THREE.Mesh(
+      new THREE.BoxGeometry(7.2, 0.3, 5.5),
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.4 })
+    );
+    relayGroup.add(relayPcb);
+
+    // 4 blue cubes
+    for (let r = 0; r < 4; r++) {
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(1.4, 1.4, 1.8),
+        new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.3 })
+      );
+      cube.position.set(-2.1 + r * 1.4, 0.85, 0.6);
+      relayGroup.add(cube);
+    }
+    relayGroup.userData = { id: 'relay', name: '4-Channel 5V Relay Module' };
+    controlBoxGroup.add(relayGroup);
+    clickableObjects.push(relayPcb);
+
+    // 3. Mini Breadboard (170-point white)
+    const miniBbMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(4.2, 0.9, 3.5),
+      new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.7 })
+    );
+    miniBbMesh.position.set(8.5, 3.65, 1.2);
+    miniBbMesh.userData = { id: 'leds', name: 'Mini 170-Tie Breadboard (LEDs & Resistors)' };
+    controlBoxGroup.add(miniBbMesh);
+    clickableObjects.push(miniBbMesh);
+
+    // 4. DHT22 White Sensor (mounted at outer edge)
+    const dhtMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 2.4, 1.2),
+      new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8 })
+    );
+    dhtMesh.position.set(7.5, 4.4, -2.6);
+    dhtMesh.userData = { id: 'dht22', name: 'DHT22 Temperature & Humidity Sensor' };
+    controlBoxGroup.add(dhtMesh);
+    clickableObjects.push(dhtMesh);
+
+    // 5. Active Buzzer 5V (Black cylinder)
+    const buzMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.7, 0.7, 1.0, 16),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3 })
+    );
+    buzMesh.position.set(10.0, 3.7, -2.6);
+    buzMesh.userData = { id: 'buzzer', name: 'Active Buzzer 5V' };
+    controlBoxGroup.add(buzMesh);
+    clickableObjects.push(buzMesh);
+
+    scene.add(controlBoxGroup);
+
+    // -------------------------------------------------------------
+    // COLOR-CODED WIRING TRACES
+    // -------------------------------------------------------------
+    function createWire(points, colorHex) {
+      const curve = new THREE.CatmullRomCurve3(points);
+      const tubeGeo = new THREE.TubeGeometry(curve, 24, 0.1, 8, false);
+      const tubeMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
+      const tube = new THREE.Mesh(tubeGeo, tubeMat);
+      scene.add(tube);
+      return tube;
+    }
+
+    // SPI Ribbon to Door RFID
+    createWire([
+      new THREE.Vector3(-1.5, 3.5, 12),
+      new THREE.Vector3(-10, 2.0, 8),
+      new THREE.Vector3(-19.0, 7.5, 4.2)
+    ], 0x3b82f6); // Blue SPI
+
+    // I2C to LCD
+    createWire([
+      new THREE.Vector3(1.0, 3.5, 12),
+      new THREE.Vector3(3.0, 2.0, 3),
+      new THREE.Vector3(3.0, 10.0, -12.0)
+    ], 0x10b981); // Green I2C
+
+    // Relay to Ceiling Fan
+    createWire([
+      new THREE.Vector3(6.5, 4.0, 12),
+      new THREE.Vector3(1.0, 8.0, 4),
+      new THREE.Vector3(-4.0, 13.8, 0)
+    ], 0xf59e0b); // Orange Relay
+
+    // IR Sensors to ESP32
+    createWire([
+      new THREE.Vector3(-1.5, 3.5, 11),
+      new THREE.Vector3(-8, 1.5, 3),
+      new THREE.Vector3(-14, 3.0, 6.5)
+    ], 0xa855f7); // Purple IR
+
+    // -------------------------------------------------------------
+    // INTERACTION: RAYCASTING & CLICK SELECTION
+    // -------------------------------------------------------------
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function updateInspector(dataId) {
+      const data = COMPONENT_DATA[dataId];
+      if (!data) return;
+
+      document.getElementById('comp-title').innerText = data.title;
+      const catElem = document.getElementById('comp-category');
+      catElem.innerText = data.category;
+      catElem.className = 'tag-badge ' + data.badge;
+
+      document.getElementById('comp-placement').innerText = data.placement;
+      document.getElementById('comp-rationale').innerText = data.rationale;
+      document.getElementById('comp-mistake').innerText = data.mistake;
+
+      const pinsContainer = document.getElementById('comp-pins');
+      pinsContainer.innerHTML = '';
+      data.pins.forEach(p => {
+        const span = document.createElement('span');
+        span.className = 'pin-pill';
+        span.innerText = p;
+        pinsContainer.appendChild(span);
+      });
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(clickableObjects, true);
+
+      if (intersects.length > 0) {
+        document.body.style.cursor = 'pointer';
+        let obj = intersects[0].object;
+        while (obj && !obj.userData.name && obj.parent) {
+          obj = obj.parent;
+        }
+        if (obj && obj.userData.name) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = e.clientX + 'px';
+          tooltip.style.top = e.clientY + 'px';
+          tooltip.innerText = obj.userData.name;
+        }
+      } else {
+        document.body.style.cursor = 'default';
+        tooltip.style.display = 'none';
+      }
+    });
+
+    window.addEventListener('click', (e) => {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(clickableObjects, true);
+
+      if (intersects.length > 0) {
+        let obj = intersects[0].object;
+        while (obj && !obj.userData.id && obj.parent) {
+          obj = obj.parent;
+        }
+        if (obj && obj.userData.id) {
+          updateInspector(obj.userData.id);
+        }
+      }
+    });
+
+    // -------------------------------------------------------------
+    // CAMERA VIEW PRESETS
+    // -------------------------------------------------------------
+    let targetCameraPos = new THREE.Vector3(45, 38, 50);
+    let targetLookAt = new THREE.Vector3(0, 4, 0);
+
+    function setCameraView(viewName) {
+      document.querySelectorAll('.controls-panel .btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (viewName === 'iso') {
+        targetCameraPos.set(45, 38, 50);
+        targetLookAt.set(0, 4, 0);
+        updateInspector('esp32');
+      } else if (viewName === 'door') {
+        targetCameraPos.set(-28, 16, 20);
+        targetLookAt.set(-15, 6, 2);
+        updateInspector('rfid');
+      } else if (viewName === 'control') {
+        targetCameraPos.set(8, 22, 28);
+        targetLookAt.set(5, 3, 12);
+        updateInspector('expansion');
+      } else if (viewName === 'top') {
+        targetCameraPos.set(0, 75, 0.1);
+        targetLookAt.set(0, 0, 0);
+      }
+    }
+
+    function resetSelection() {
+      setCameraView('iso');
+    }
+
+    // -------------------------------------------------------------
+    // INTERACTIVE TOGGLES
+    // -------------------------------------------------------------
+    let fanActive = true;
+    function toggleFan() {
+      fanActive = !fanActive;
+      document.getElementById('fan-btn-icon').innerText = fanActive ? '⚡' : '⏸️';
+    }
+
+    let ledsActive = true;
+    function toggleLEDs() {
+      ledsActive = !ledsActive;
+      ledLights.forEach(l => l.intensity = ledsActive ? 0.8 : 0);
+      ledMeshes.forEach(m => m.material.emissiveIntensity = ledsActive ? 0.8 : 0.05);
+    }
+
+    // -------------------------------------------------------------
+    // ANIMATION RENDER LOOP
+    // -------------------------------------------------------------
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+
+      // Fan spinning animation
+      if (fanActive) {
+        fanRotor.rotation.y += delta * 18;
+      }
+
+      // Smooth camera interpolation
+      camera.position.lerp(targetCameraPos, 0.05);
+      controls.target.lerp(targetLookAt, 0.05);
+      controls.update();
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Default inspection selection
+    updateInspector('esp32');
+  </script>
+</body>
+</html>

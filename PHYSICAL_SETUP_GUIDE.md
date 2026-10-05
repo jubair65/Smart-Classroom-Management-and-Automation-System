@@ -441,6 +441,8 @@ Before plugging in the USB cable for the first time:
 
 | File | Description |
 |------|-------------|
+| [`3D_PROTOTYPE_PLACEMENT_GUIDE.md`](file:///d:/Study/3.2/CSE-315/Project/simulation/3D_PROTOTYPE_PLACEMENT_GUIDE.md) | 3D prototype spatial placement guide with renders & dimensional zoning |
+| [`3d_prototype_viewer/index.html`](file:///d:/Study/3.2/CSE-315/Project/simulation/3d_prototype_viewer/index.html) | Interactive 3D Web Prototype Viewer (Three.js with 360° rotation) |
 | [`RoboticsBD_Components_Price_List.xlsx`](file:///d:/Study/3.2/CSE-315/Project/simulation/RoboticsBD_Components_Price_List.xlsx) | Excel BOM Spreadsheet with live prices & purchase links from store.roboticsbd.com |
 | [`RoboticsBD_Components_Price_List.csv`](file:///d:/Study/3.2/CSE-315/Project/simulation/RoboticsBD_Components_Price_List.csv) | CSV version of the RoboticsBD components price list |
 | [`sketch.ino`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/sketch.ino) | Full ESP32 firmware with Firebase sync |
