@@ -23,34 +23,35 @@
 
 | # | Component | Specification | Qty | Unit Price (BDT) | Total (BDT) | Notes |
 |---|-----------|--------------|-----|-------------------|-------------|-------|
-| 1 | **ESP32 DevKit V1** | 38-pin, Dual-Core, Wi-Fi + BT | 1 | 380 – 450 | ~420 | The main microcontroller. Buy the 38-pin DevKit V1 |
-| 2 | **MFRC522 RFID Module** | 13.56 MHz SPI, with antenna | 1 | 130 – 160 | ~150 | Usually comes bundled with 2 RFID tags (cards/keychain) |
-| 3 | **RFID Cards / Key Tags** | ISO 14443A Mifare 1K | 4–6 | 20 – 30 ea | ~100 | One for Teacher, three for Students |
-| 4 | **DHT22 Sensor** | Temp + Humidity, ±0.5°C accuracy | 1 | 120 – 160 | ~140 | Do NOT use DHT11 — too inaccurate and slow |
-| 5 | **16×2 LCD with I2C Module** | HD44780 + PCF8574 I2C backpack | 1 | 150 – 200 | ~175 | Buy WITH the I2C backpack pre-soldered. Saves 12 wires |
-| 6 | **Active Buzzer** | 5V, self-oscillating (not passive) | 1 | 15 – 25 | ~20 | MUST be active buzzer. Passive will NOT work with tone() |
-| 7 | **4-Channel Relay Module** | 5V coil, 10A 250VAC contacts | 1 | 120 – 180 | ~150 | Single 4-channel board is easier than 4 separate relays |
-| 8 | **IR Obstacle Sensor (x2)** | TCRT5000 style, adjustable range | 2 | 50 – 80 ea | ~130 | One for "Outside" door, one for "Inside" door |
-| 9 | **5V DC Cooling Fan** | 5V 2-pin PC case fan | 1 | 80 – 150 | ~100 | ✅ Real fan for prototype — connected to Relay CH1 |
-| 10 | **1N4007 Flyback Diode** | 1A, 1000V reverse blocking | 1 | 2 – 5 | ~5 | **CRITICAL** — must be wired across fan motor terminals |
-| 11 | **Breadboard (Full-size)** | 830 tie-points | 1 | 80 – 100 | ~90 | Or use 2 half-size ones joined |
-| 12 | **Jumper Wires** | M-M, M-F, F-F assorted 20cm | 1 pack | 60 – 100 | ~80 | Get all three types: M-M, M-F, F-F |
-| 13 | **USB Micro-B Cable** | Data cable for ESP32 programming | 1 | 50 – 80 | ~60 | Good quality data cable (NOT charge-only) |
-| 14 | **5V 2A Power Adapter** (optional) | USB-A wall adapter | 1 | 80 – 120 | ~100 | To power ESP32 without keeping laptop connected |
-| 15 | **10kΩ Resistor** | 1/4W, for GPIO 34 external pull-up | 1 | ~1 | ~2 | Required for Unknown Card button on GPIO 34 |
-| 16 | **220Ω Resistors** | Current limiting for prototype LEDs | 3 | ~1 ea | ~5 | ✅ Required — one per LED (Light, AC, Projector) |
-| 17 | **LED Yellow** | 5mm, for Light prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH2 (Light) indicator |
-| 18 | **LED Blue** | 5mm, for AC prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH3 (AC) indicator |
-| 19 | **LED White** | 5mm, for Projector prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH4 (Projector) indicator |
-| 20 | **Cardboard / Wood Frame** | For door frame mock-up | 1 | 20 – 50 | ~40 | Mounting IR sensors on a door frame |
+| 1 | **ESP32 DevKit V1 (30-pin)** | 30-pin (NodeMCU-32S style), Dual-Core, Wi-Fi + BT | 1 | 350 – 420 | ~380 | Main microcontroller. 30-pin version fits better, is readily available, and avoids unusable SPI flash pins |
+| 2 | **ESP32 30-Pin Expansion Board** | 30-pin socket breakout, screw terminals / G-V-S pins, DC jack | 1 | 180 – 250 | ~200 | **Highly Recommended** — Breaks out all GPIOs with dedicated VCC & GND. Eliminates messy loose wiring! |
+| 3 | **MFRC522 RFID Module** | 13.56 MHz SPI, with antenna | 1 | 130 – 160 | ~150 | Usually comes bundled with 2 RFID tags (cards/keychain) |
+| 4 | **RFID Cards / Key Tags** | ISO 14443A Mifare 1K | 4–6 | 20 – 30 ea | ~100 | One for Teacher, three for Students |
+| 5 | **DHT22 Sensor** | Temp + Humidity, ±0.5°C accuracy | 1 | 120 – 160 | ~140 | Do NOT use DHT11 — too inaccurate and slow |
+| 6 | **16×2 LCD with I2C Module** | HD44780 + PCF8574 I2C backpack | 1 | 150 – 200 | ~175 | Buy WITH the I2C backpack pre-soldered. Saves 12 wires |
+| 7 | **Active Buzzer** | 5V, self-oscillating (not passive) | 1 | 15 – 25 | ~20 | MUST be active buzzer. Passive will NOT work with tone() |
+| 8 | **4-Channel Relay Module** | 5V coil, 10A 250VAC contacts | 1 | 120 – 180 | ~150 | Single 4-channel board is easier than 4 separate relays |
+| 9 | **IR Obstacle Sensor (x2)** | TCRT5000 style, adjustable range | 2 | 50 – 80 ea | ~130 | One for "Outside" door, one for "Inside" door |
+| 10 | **5V DC Cooling Fan** | 5V 2-pin PC case fan | 1 | 80 – 150 | ~100 | ✅ Real fan for prototype — connected to Relay CH1 |
+| 11 | **1N4007 Flyback Diode** | 1A, 1000V reverse blocking | 1 | 2 – 5 | ~5 | **CRITICAL** — must be wired across fan motor terminals |
+| 12 | **Mini Breadboard** | 170 tie-points (SYB-170) or 400 tie-points | 1 | 30 – 50 | ~40 | Placed alongside expansion board to hold the 3 LEDs and 220Ω resistors |
+| 13 | **Jumper Wires (Assorted)** | M-M, M-F, F-F 20cm packs (20 pcs ea) | 1 pack ea | 55 ea (165 total) | ~165 | **All 3 types needed**: M-M for Relay-to-Breadboard & tie-point links; F-F for sensor headers; M-F for expansion-to-breadboard |
+| 14 | **USB Micro-B Cable** | Data cable for ESP32 programming | 1 | 50 – 80 | ~60 | Good quality data cable (NOT charge-only) |
+| 15 | **5V 2A / 9V–12V 1A DC Adapter** (optional) | DC Barrel Jack or USB-A wall adapter | 1 | 80 – 150 | ~120 | Powers the expansion board DC jack or ESP32 without laptop connected |
+| 16 | **10kΩ Resistor** | 1/4W, for GPIO 34 external pull-up | 1 | ~1 | ~2 | Required for Unknown Card button on GPIO 34 |
+| 17 | **220Ω Resistors** | Current limiting for prototype LEDs | 3 | ~1 ea | ~5 | ✅ Required — one per LED (Light, AC, Projector) |
+| 18 | **LED Yellow** | 5mm, for Light prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH2 (Light) indicator |
+| 19 | **LED Blue** | 5mm, for AC prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH3 (AC) indicator |
+| 20 | **LED White** | 5mm, for Projector prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH4 (Projector) indicator |
+| 21 | **Cardboard / Wood Frame** | For door frame mock-up | 1 | 20 – 50 | ~40 | Mounting IR sensors on a door frame |
 
 ### 💰 Total Estimated Budget (Your Confirmed Build)
 
 | Scenario | Cost (BDT) |
 |----------|------------|
-| **Your Build (DC Fan + 3 LEDs + all components)** | **1,500 – 1,800** |
-| With door frame enclosure | 1,550 – 1,850 |
-| With dedicated 5V wall adapter for fan | 1,600 – 1,950 |
+| **Your Build (30-pin ESP32 + Expansion Board + Mini Breadboard + DC Fan + 3 LEDs + all components)** | **1,650 – 1,950** |
+| With door frame enclosure | 1,700 – 2,000 |
+| With dedicated 9V/12V or 5V power adapter | 1,750 – 2,100 |
 
 > [!TIP]
 > **Where to Buy in Dhaka:**
@@ -99,12 +100,19 @@
 
 ## 🛠️ Step-by-Step Physical Assembly Instructions
 
-### Phase 1: Power Rails Setup
+### Phase 1: ESP32 Expansion Board & Power Distribution Setup
 
-1. Place the ESP32 DevKit V1 in the **center** of the breadboard, straddling the center channel.
-2. Connect **ESP32 VIN** pin to the **positive (red) rail** of the breadboard.
-3. Connect **ESP32 GND** pin to the **negative (black) rail** of the breadboard.
-4. Connect **ESP32 3.3V** pin to a **separate 3.3V rail** (mark a separate column).
+1. **Mount the ESP32 on the Expansion Board:**
+   - Align the 30-pin ESP32 DevKit V1 with the socket on the **30-pin ESP32 Expansion Board** (antenna pointing outwards, USB port accessible).
+   - Press down gently and evenly until all pins are fully seated in the headers.
+2. **Expansion Board Power Distribution:**
+   - The expansion board provides dedicated **VCC** (5V / 3.3V selectable or separated rails) and **GND** terminal pins for every GPIO.
+   - For **5V peripherals** (LCD VCC, Relay VCC, DC Fan): connect to **5V / VIN** terminals.
+   - For **3.3V peripherals** (MFRC522 VCC, DHT22, IR Sensors): connect to **3.3V** terminals.
+3. **Mini Breadboard Setup (For Discrete LEDs & Resistors):**
+   - Place the **170-point mini breadboard** next to the expansion board.
+   - Use it exclusively to hold the 3 discrete prototype LEDs (Yellow, Blue, White) and their 220Ω resistors.
+   - Connect the mini breadboard's ground rail to a **GND** terminal on the expansion board using an M-F jumper wire.
 
 > [!IMPORTANT]
 > The ESP32 has TWO voltage outputs:
@@ -355,7 +363,7 @@ The firmware uses hardcoded UIDs. To register your physical RFID cards:
 
 Before plugging in the USB cable for the first time:
 
-- [ ] ESP32 sits in breadboard with no shorts across the center channel
+- [ ] ESP32 is firmly seated in the 30-pin expansion board socket with correct orientation
 - [ ] All **3.3V** peripherals (RFID, DHT22, IR sensors) are on **3.3V**, NOT 5V
 - [ ] All **5V** peripherals (LCD, Relay VCC) are on **5V (VIN)**, NOT 3.3V
 - [ ] **GPIO 34** has the 10kΩ external pull-up resistor to 3.3V
@@ -433,6 +441,8 @@ Before plugging in the USB cable for the first time:
 
 | File | Description |
 |------|-------------|
+| [`RoboticsBD_Components_Price_List.xlsx`](file:///d:/Study/3.2/CSE-315/Project/simulation/RoboticsBD_Components_Price_List.xlsx) | Excel BOM Spreadsheet with live prices & purchase links from store.roboticsbd.com |
+| [`RoboticsBD_Components_Price_List.csv`](file:///d:/Study/3.2/CSE-315/Project/simulation/RoboticsBD_Components_Price_List.csv) | CSV version of the RoboticsBD components price list |
 | [`sketch.ino`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/sketch.ino) | Full ESP32 firmware with Firebase sync |
 | [`diagram.json`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/diagram.json) | Wokwi circuit diagram (virtual reference) |
 | [`README_WOKWI.md`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/README_WOKWI.md) | Wokwi simulation guide |
