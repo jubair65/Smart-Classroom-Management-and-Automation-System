@@ -17,8 +17,8 @@
 // ---------------- FIREBASE & WI-FI CONFIGURATION ----------------
 // For Wokwi simulation: SSID = "Wokwi-GUEST", Password = ""
 // For physical ESP32: enter your mobile hotspot / home Wi-Fi credentials
-const char* WIFI_SSID     = "Wokwi-GUEST";
-const char* WIFI_PASS     = "";
+const char* WIFI_SSID     = "Jubair";
+const char* WIFI_PASS     = "bolbona8";
 
 // Paste your Firebase Realtime Database URL (MUST start with https:// and have NO trailing slash)
 // E.g.: "https://smart-classroom-team06-default-rtdb.firebaseio.com"
@@ -52,7 +52,8 @@ const uint8_t CARD_PINS[5] = { 15, 2, 16, 12, 34 };
 // Active Buzzer
 const uint8_t PIN_BUZ   = 25;
 
-// 4-Channel Relays (HIGH = ON, LOW = OFF)
+// 4-Channel Relays (Active-LOW: LOW = ON, HIGH = OFF)
+const bool RELAY_ACTIVE_LOW = true;
 const uint8_t PIN_FAN   = 26;   // Channel 1: Ceiling Fan
 const uint8_t PIN_LIGHT = 14;   // Channel 2: Room Light
 const uint8_t PIN_AC    = 13;   // Channel 3: AC
@@ -145,15 +146,18 @@ void lcdLine(uint8_t row, const char* s) {
   lcd.print(b);
 }
 
-void beep(unsigned int ms, unsigned int freq) {
-  tone(PIN_BUZ, freq, ms); // tone() stops itself after ms via hardware timer — non-blocking
+void beep(unsigned int ms, unsigned int freq = 0) {
+  digitalWrite(PIN_BUZ, HIGH);
+  delay(ms);
+  digitalWrite(PIN_BUZ, LOW);
 }
 
 void alarmBeep() {
-  // Intentionally blocking — security alert must be fully heard
   for (uint8_t i = 0; i < 3; i++) {
-    tone(PIN_BUZ, 2000, 150);
-    delay(250); // 150ms tone + 100ms gap
+    digitalWrite(PIN_BUZ, HIGH);
+    delay(150);
+    digitalWrite(PIN_BUZ, LOW);
+    delay(100);
   }
 }
 
@@ -172,8 +176,8 @@ void firebasePut(const char* path, const char* jsonPayload) {
   client.setInsecure();
 
   HTTPClient https;
-  https.setTimeout(3000);
-  https.setReuse(false); // Do not keep socket alive on temporary stack client
+  https.setTimeout(6000);
+  https.setReuse(false);
 
   String url = String(FIREBASE_URL) + path;
   if (strlen(FIREBASE_AUTH) > 0) {
@@ -185,13 +189,13 @@ void firebasePut(const char* path, const char* jsonPayload) {
     https.addHeader("Connection", "close");
     int code = https.PUT(jsonPayload);
     if (code > 0) {
-      Serial.print(F("[FIREBASE PUT] -> HTTP ")); Serial.println(code);
+      Serial.print(F("[FIREBASE PUT OK] -> HTTP ")); Serial.println(code);
     } else {
       Serial.print(F("[FIREBASE PUT ERR] ")); Serial.println(https.errorToString(code));
     }
     https.end();
   }
-  client.stop(); // Immediately release lwIP socket and TCP buffer
+  client.stop();
 }
 
 
@@ -202,8 +206,8 @@ void firebasePost(const char* path, const char* jsonPayload) {
   client.setInsecure();
 
   HTTPClient https;
-  https.setTimeout(3000);
-  https.setReuse(false); // Do not keep socket alive on temporary stack client
+  https.setTimeout(6000);
+  https.setReuse(false);
 
   String url = String(FIREBASE_URL) + path;
   if (strlen(FIREBASE_AUTH) > 0) {
@@ -215,13 +219,13 @@ void firebasePost(const char* path, const char* jsonPayload) {
     https.addHeader("Connection", "close");
     int code = https.POST(jsonPayload);
     if (code > 0) {
-      Serial.print(F("[FIREBASE POST] -> HTTP ")); Serial.println(code);
+      Serial.print(F("[FIREBASE POST OK] -> HTTP ")); Serial.println(code);
     } else {
       Serial.print(F("[FIREBASE POST ERR] ")); Serial.println(https.errorToString(code));
     }
     https.end();
   }
-  client.stop(); // Immediately release lwIP socket and TCP buffer
+  client.stop();
 }
 
 
@@ -303,13 +307,55 @@ void firebasePushHistory() {
   firebasePost("/classroom/history.json", b);
 }
 
+// ---------------- FIREBASE ASYNC BACKGROUND WORKER (CORE 0) ----------------
+bool pendingAlert = false;
+char pendingAlertType[32] = "";
+char pendingAlertDetail[64] = "";
+
+void triggerAlert(const char* type, const char* detail) {
+  strncpy(pendingAlertType, type, sizeof(pendingAlertType) - 1);
+  pendingAlertType[sizeof(pendingAlertType) - 1] = '\0';
+  strncpy(pendingAlertDetail, detail, sizeof(pendingAlertDetail) - 1);
+  pendingAlertDetail[sizeof(pendingAlertDetail) - 1] = '\0';
+  pendingAlert = true;
+}
+
+void firebaseTask(void* pvParameters) {
+  unsigned long lastLivePush = 0;
+  unsigned long lastHistPush = 0;
+  vTaskDelay(pdMS_TO_TICKS(4000)); // Allow 4 seconds after boot for network stack to stabilize
+
+  for (;;) {
+    if (WiFi.status() == WL_CONNECTED) {
+      if (pendingAlert) {
+        pendingAlert = false;
+        firebasePushAlert(pendingAlertType, pendingAlertDetail);
+        vTaskDelay(pdMS_TO_TICKS(1500)); // Essential delay for lwIP TCP socket teardown
+      }
+      if (dirtyLive && (millis() - lastLivePush >= 2000UL)) {
+        dirtyLive = false;
+        lastLivePush = millis();
+        firebaseSyncLive();
+        vTaskDelay(pdMS_TO_TICKS(1500)); // Essential delay for lwIP TCP socket teardown
+      }
+      if (dirtyHistory && (millis() - lastHistPush >= 4000UL)) {
+        dirtyHistory = false;
+        lastHistPush = millis();
+        firebasePushHistory();
+        vTaskDelay(pdMS_TO_TICKS(1500)); // Essential delay for lwIP TCP socket teardown
+      }
+    }
+    vTaskDelay(pdMS_TO_TICKS(200));
+  }
+}
+
 void logEvent(const char* type, const char* detail, bool unknown) {
   char ts[9]; stamp(ts);
   Serial.print('['); Serial.print(ts); Serial.print(F("] "));
   Serial.print(type); Serial.print(F(" : ")); Serial.println(detail);
   if (unknown) {
     Serial.print(F("ALERT> Unknown person detected at ")); Serial.println(ts);
-    firebasePushAlert("UNKNOWN_PERSON", detail);
+    triggerAlert("UNKNOWN_PERSON", detail);
   }
 }
 
@@ -360,11 +406,11 @@ void applyAutomation() {
   fanOn   = nFan;
   acOn    = nAC;
 
-  // Active-HIGH for Wokwi Relay Module & direct LED driving
-  digitalWrite(PIN_LIGHT, lightOn ? HIGH : LOW);
-  digitalWrite(PIN_PROJ,  projOn  ? HIGH : LOW);
-  digitalWrite(PIN_FAN,   fanOn   ? HIGH : LOW);
-  digitalWrite(PIN_AC,    acOn    ? HIGH : LOW);
+  // Set physical Relay pins based on RELAY_ACTIVE_LOW
+  digitalWrite(PIN_LIGHT, RELAY_ACTIVE_LOW ? (lightOn ? LOW : HIGH) : (lightOn ? HIGH : LOW));
+  digitalWrite(PIN_PROJ,  RELAY_ACTIVE_LOW ? (projOn  ? LOW : HIGH) : (projOn  ? HIGH : LOW));
+  digitalWrite(PIN_FAN,   RELAY_ACTIVE_LOW ? (fanOn   ? LOW : HIGH) : (fanOn   ? HIGH : LOW));
+  digitalWrite(PIN_AC,    RELAY_ACTIVE_LOW ? (acOn    ? LOW : HIGH) : (acOn    ? HIGH : LOW));
 }
 
 // ---------------- RFID CARD HANDLING ----------------
@@ -378,8 +424,6 @@ void onCard(uint8_t idx) {
     logEvent("UNKNOWN", "Unregistered card tapped", true);
     dirtyLive = true;
     dirtyHistory = true;
-    firebaseSyncLive(); // Immediate live sync for instant mobile app alarm!
-    lastLiveSync = millis();
     return;
   }
 
@@ -415,10 +459,10 @@ void checkMFRC522() {
   Serial.print(F("[RFID SCAN] Card UID: "));
   Serial.println(scannedHex);
 
-  if (scannedHex.indexOf("DEADBEEF") >= 0)      onCard(0); // Teacher (Sayma Ma'am)
-  else if (scannedHex.indexOf("12345678") >= 0) onCard(1); // Student 1 (Hasanul)
-  else if (scannedHex.indexOf("AABBCCDD") >= 0) onCard(2); // Student 2 (Jubair)
-  else if (scannedHex.indexOf("11223344") >= 0) onCard(3); // Student 3 (Maria)
+  if (scannedHex.indexOf("B1C7030A") >= 0)            onCard(0); // Teacher (Sayma Ma'am)
+  else if (scannedHex.indexOf("532E13ADA10001") >= 0) onCard(1); // Student 1 (Hasanul)
+  else if (scannedHex.indexOf("534BD4AFA10001") >= 0) onCard(2); // Student 2 (Jubair)
+  else if (scannedHex.indexOf("53148AABA10001") >= 0) onCard(3); // Student 3 (Maria)
   else onCard(4); // Unknown Card
 
   rfid.PICC_HaltA();
@@ -504,8 +548,6 @@ void handleCrossing(bool entering) {
   applyAutomation();
   dirtyLive = true;
   dirtyHistory = true;
-  firebaseSyncLive();
-  lastLiveSync = millis();
 }
 
 
@@ -645,22 +687,20 @@ void handleSerial() {
 void setup() {
   Serial.begin(115200);
 
-  // Initialize Relays as OUTPUT and default to OFF (LOW)
+  // Initialize Relays as OUTPUT and default to OFF
   const uint8_t outs[4] = { PIN_FAN, PIN_LIGHT, PIN_AC, PIN_PROJ };
   for (uint8_t i = 0; i < 4; i++) {
     pinMode(outs[i], OUTPUT);
-    digitalWrite(outs[i], LOW);
+    digitalWrite(outs[i], RELAY_ACTIVE_LOW ? HIGH : LOW);
   }
 
   pinMode(PIN_BUZ, OUTPUT);
   pinMode(PIN_IR1, INPUT_PULLUP);
   pinMode(PIN_IR2, INPUT_PULLUP);
 
-  // Card Pushbuttons with internal pullup
-  for (uint8_t i = 0; i < 4; i++) {
-    pinMode(CARD_PINS[i], INPUT_PULLUP);
-  }
-  pinMode(CARD_PINS[4], INPUT); // Pin 34 uses external pullup resistor
+  // (Wokwi card buttons disabled: physical RFID cards are read via MFRC522)
+  // for (uint8_t i = 0; i < 4; i++) pinMode(CARD_PINS[i], INPUT_PULLUP);
+  // pinMode(CARD_PINS[4], INPUT);
 
   // Initialize LCD
   Wire.begin(21, 22);
@@ -692,12 +732,24 @@ void setup() {
   if (WiFi.status() == WL_CONNECTED) {
     Serial.print(F(" Connected! IP: "));
     Serial.println(WiFi.localIP());
+
     // Configure NTP time for Bangladesh (UTC+6 = 21600 seconds)
     configTime(21600, 0, "pool.ntp.org", "time.google.com");
-    firebaseSyncLive();
   } else {
     Serial.println(F(" Continuing in offline simulation mode."));
   }
+
+  // Launch asynchronous Firebase synchronization task on Core 0
+  // Leaves Core 1 exclusively for sensors, RFID, IR gate, and LCD (0ms latency!)
+  xTaskCreatePinnedToCore(
+    firebaseTask,
+    "FirebaseSync",
+    8192,
+    NULL,
+    1,
+    NULL,
+    0
+  );
 
   readTemperature();
   applyAutomation();
@@ -708,7 +760,7 @@ void setup() {
 void loop() {
   handleSerial();
   checkMFRC522();
-  updateCards();
+  // updateCards(); // Disabled: Physical cards are read via MFRC522 RFID reader
   updateIR();
 
   // Auto-reconnect if Wi-Fi momentarily drops
@@ -730,20 +782,6 @@ void loop() {
   if (millis() - lastRender >= 400) {
     lastRender = millis();
     renderLCD();
-  }
-
-  // Fast Live Synchronization (sub-second responsiveness for card taps & door crossings)
-  if ((dirtyLive && (millis() - lastLiveSync >= 500)) || (millis() - lastLiveSync >= 30000UL)) {
-    firebaseSyncLive();
-    dirtyLive = false;
-    lastLiveSync = millis();
-  }
-
-  // Periodic history snapshots (only on meaningful classroom events, or 60s background heartbeat)
-  if ((dirtyHistory && (millis() - lastHistorySync >= 1500)) || (millis() - lastHistorySync >= 60000UL)) {
-    firebasePushHistory();
-    dirtyHistory = false;
-    lastHistorySync = millis();
   }
 }
 

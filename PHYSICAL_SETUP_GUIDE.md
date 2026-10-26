@@ -1,456 +1,281 @@
 # 🏫 Smart Classroom Management System — Physical Setup Guide
 
 **Team 06 — CSE 315 / 316 (University of Asia Pacific)**  
-*ESP32 + Firebase + Android App — Complete Hardware Build Manual*
+*ESP32 + Firebase Realtime Database + Android Mobile App — Complete Hardware Assembly & Troubleshooting Manual*
 
 ---
 
-## 📐 Physical Hardware Layout
+## 📐 Physical Hardware Overview
 
-![Smart Classroom Hardware Layout](hardware_layout.jpg)
-
-> [!NOTE]
-> The diagram above shows the complete physical wiring layout.
-> **Red** = VCC/Power, **Black** = GND, **Blue** = SPI Data, **Green** = I2C / Sensors, **Orange** = Relay control signals.
+```
+                      ┌───────────────────────────────────────────┐
+                      │          ESP32 DevKit V1 (30-Pin)         │
+                      │          [Dual-Core Xtensa @ 240MHz]      │
+                      └─────────────────────┬─────────────────────┘
+                                            │
+         ┌──────────────────────────────────┼──────────────────────────────────┐
+         │                                  │                                  │
+  [ CORE 1: HARDWARE LOOP ]                 │                   [ CORE 0: ASYNC CLOUD ]
+  (0ms latency, 100% responsive)            │                   (Non-blocking FreeRTOS Task)
+         │                                  │                                  │
+         ├─► RFID MFRC522 (VSPI)            │                                  ├─► WiFi 2.4GHz
+         ├─► Dual IR Gate (IR1 / IR2)       │                                  ├─► Firebase Realtime DB
+         ├─► DHT22 Temp / Humidity          │                                  │   • /classroom/live
+         ├─► I2C 16x2 LCD Display           │                                  │   • /classroom/alerts
+         ├─► 5V Active Buzzer               │                                  │   • /classroom/history
+         └─► 4-Channel Relay Module         │                                  └─► Android Mobile App
+             • CH1: 5V DC Fan               │
+             • CH2: Light (Yellow LED)      │
+             • CH3: AC (Blue LED)           │
+             • CH4: Projector (White LED)   │
+```
 
 ---
 
-## 🧩 Components List & Estimated Prices (Bangladesh Market)
+## 🧩 Components & Bill of Materials (BOM)
 
-> [!NOTE]
-> Prices are approximate BDT values from Dhaka markets (Elephant Road / Banani) or online stores (Techshopbd.com, Robu.in).
-> Prices are subject to change. Always verify before purchasing.
-
-| # | Component | Specification | Qty | Unit Price (BDT) | Total (BDT) | Notes |
-|---|-----------|--------------|-----|-------------------|-------------|-------|
-| 1 | **ESP32 DevKit V1 (30-pin)** | 30-pin (NodeMCU-32S style), Dual-Core, Wi-Fi + BT | 1 | 350 – 420 | ~380 | Main microcontroller. 30-pin version fits better, is readily available, and avoids unusable SPI flash pins |
-| 2 | **ESP32 30-Pin Expansion Board** | 30-pin socket breakout, screw terminals / G-V-S pins, DC jack | 1 | 180 – 250 | ~200 | **Highly Recommended** — Breaks out all GPIOs with dedicated VCC & GND. Eliminates messy loose wiring! |
-| 3 | **MFRC522 RFID Module** | 13.56 MHz SPI, with antenna | 1 | 130 – 160 | ~150 | Usually comes bundled with 2 RFID tags (cards/keychain) |
-| 4 | **RFID Cards / Key Tags** | ISO 14443A Mifare 1K | 4–6 | 20 – 30 ea | ~100 | One for Teacher, three for Students |
-| 5 | **DHT22 Sensor** | Temp + Humidity, ±0.5°C accuracy | 1 | 120 – 160 | ~140 | Do NOT use DHT11 — too inaccurate and slow |
-| 6 | **16×2 LCD with I2C Module** | HD44780 + PCF8574 I2C backpack | 1 | 150 – 200 | ~175 | Buy WITH the I2C backpack pre-soldered. Saves 12 wires |
-| 7 | **Active Buzzer** | 5V, self-oscillating (not passive) | 1 | 15 – 25 | ~20 | MUST be active buzzer. Passive will NOT work with tone() |
-| 8 | **4-Channel Relay Module** | 5V coil, 10A 250VAC contacts | 1 | 120 – 180 | ~150 | Single 4-channel board is easier than 4 separate relays |
-| 9 | **IR Obstacle Sensor (x2)** | TCRT5000 style, adjustable range | 2 | 50 – 80 ea | ~130 | One for "Outside" door, one for "Inside" door |
-| 10 | **5V DC Cooling Fan** | 5V 2-pin PC case fan | 1 | 80 – 150 | ~100 | ✅ Real fan for prototype — connected to Relay CH1 |
-| 11 | **1N4007 Flyback Diode** | 1A, 1000V reverse blocking | 1 | 2 – 5 | ~5 | **CRITICAL** — must be wired across fan motor terminals |
-| 12 | **Mini Breadboard** | 170 tie-points (SYB-170) or 400 tie-points | 1 | 30 – 50 | ~40 | Placed alongside expansion board to hold the 3 LEDs and 220Ω resistors |
-| 13 | **Jumper Wires (Assorted)** | M-M, M-F, F-F 20cm packs (20 pcs ea) | 1 pack ea | 55 ea (165 total) | ~165 | **All 3 types needed**: M-M for Relay-to-Breadboard & tie-point links; F-F for sensor headers; M-F for expansion-to-breadboard |
-| 14 | **USB Micro-B Cable** | Data cable for ESP32 programming | 1 | 50 – 80 | ~60 | Good quality data cable (NOT charge-only) |
-| 15 | **5V 2A / 9V–12V 1A DC Adapter** (optional) | DC Barrel Jack or USB-A wall adapter | 1 | 80 – 150 | ~120 | Powers the expansion board DC jack or ESP32 without laptop connected |
-| 16 | **10kΩ Resistor** | 1/4W, for GPIO 34 external pull-up | 1 | ~1 | ~2 | Required for Unknown Card button on GPIO 34 |
-| 17 | **220Ω Resistors** | Current limiting for prototype LEDs | 3 | ~1 ea | ~5 | ✅ Required — one per LED (Light, AC, Projector) |
-| 18 | **LED Yellow** | 5mm, for Light prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH2 (Light) indicator |
-| 19 | **LED Blue** | 5mm, for AC prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH3 (AC) indicator |
-| 20 | **LED White** | 5mm, for Projector prototype | 1 | 3 – 5 | ~5 | ✅ Required — Relay CH4 (Projector) indicator |
-| 21 | **Cardboard / Wood Frame** | For door frame mock-up | 1 | 20 – 50 | ~40 | Mounting IR sensors on a door frame |
-
-### 💰 Total Estimated Budget (Your Confirmed Build)
-
-| Scenario | Cost (BDT) |
-|----------|------------|
-| **Your Build (30-pin ESP32 + Expansion Board + Mini Breadboard + DC Fan + 3 LEDs + all components)** | **1,650 – 1,950** |
-| With door frame enclosure | 1,700 – 2,000 |
-| With dedicated 9V/12V or 5V power adapter | 1,750 – 2,100 |
-
-> [!TIP]
-> **Where to Buy in Dhaka:**
-> - **Elephant Road / Haatirpool, Dhaka** — Physical electronics shops, good for same-day purchase
-> - **Techshop BD** (techshopbd.com) — Online, good selection and delivery
-> - **Robu.in** — Indian site, ships to BD; good for DHT22 and RFID modules
-> - **AliExpress** — Cheapest, but 2–4 weeks delivery
+| # | Component | Specification | Qty | Role in Prototype |
+|---|-----------|--------------|-----|-------------------|
+| 1 | **ESP32 DevKit V1** | 30-pin, Dual-Core 240MHz, Wi-Fi + BT | 1 | Master Controller (runs Core 0 background sync + Core 1 sensor loop) |
+| 2 | **ESP32 30-Pin Expansion Board** | Breakout with G-V-S headers & DC Jack | 1 | Distributes 5V, 3.3V, and GND rails cleanly |
+| 3 | **MFRC522 RFID Module** | 13.56 MHz SPI Reader (**3.3V ONLY**) | 1 | Scans student & teacher attendance cards |
+| 4 | **MIFARE Classic 1K Cards** | 13.56 MHz ISO 14443A RFID Cards | 4 | Registered to Teacher + 3 Students |
+| 5 | **DHT22 (AM2302) Sensor** | Temp & Humidity Module (±0.5°C accuracy) | 1 | Triggers Fan ($\ge$27.0°C) and AC ($\ge$30.0°C) automation |
+| 6 | **16×2 LCD + I2C Backpack** | PCF8574 I2C adapter (Address `0x27`) | 1 | Live rotating display for occupancy, temp & appliances |
+| 7 | **Active 5V Buzzer** | Self-oscillating buzzer (**not passive**) | 1 | Audio feedback for card taps & security intruder alarm |
+| 8 | **4-Channel 5V Relay Module** | Optocoupler isolated, **Active-LOW** | 1 | Switches power to Fan, Light, AC, and Projector |
+| 9 | **IR Obstacle Sensors** | TCRT5000 / LM393 with trimpot | 2 | IR1 (Outside) & IR2 (Inside) for directional door tracking |
+| 10 | **5V DC Cooling Fan** | 40x40x10mm 2-pin brushless fan | 1 | Real motor load on Relay CH1 |
+| 11 | **1N4007 Rectifier Diode** | 1A, 1000V Flyback Diode | 1 | **CRITICAL:** Clamps inductive voltage kickback across fan |
+| 12 | **Prototype LEDs** | Yellow (Light), Blue (AC), White (Proj) | 3 | Appliance prototypes for CH2, CH3, and CH4 |
+| 13 | **220Ω Resistors** | 1/4W Current-limiting resistors | 3 | Protects each prototype LED |
+| 14 | **Mini Breadboard** | 170-point breadboard | 1 | Holds prototype LEDs and resistor circuits |
+| 15 | **Power Source** | **5V / 2A Phone Charger** or DC Barrel Jack | 1 | Prevents 5V voltage sag when all relays and fan turn ON |
 
 ---
 
-## 🔌 Complete Pin Wiring Table
+## 🔌 Complete Pin Assignment Table
 
-### ESP32 GPIO Pin Assignment
+| ESP32 Pin | Connected Peripheral | Peripheral Pin | Operating Voltage | Function |
+| :--- | :--- | :--- | :--- | :--- |
+| **3.3V** | MFRC522, DHT22, IR1, IR2 | `VCC` | **3.3V ONLY** | Clean regulated sensor power rail |
+| **VIN (5V)** | LCD, Relay VCC, Relay COMs | `VCC` / `COM` | **5.0V** | High-power rail from USB/DC source |
+| **GND** | All Peripherals & Loads | `GND` / `(-)` | **0V** | Common system ground rail |
+| **GPIO 4** | MFRC522 RFID | `RST` | 3.3V Logic | RFID Hardware Reset |
+| **GPIO 5** | MFRC522 RFID | `SDA (SS / CS)`| 3.3V Logic | SPI Slave Select |
+| **GPIO 13** | 4-Channel Relay (CH3) | `IN3` | 3.3V Logic | Controls **AC (Blue LED)** |
+| **GPIO 14** | 4-Channel Relay (CH2) | `IN2` | 3.3V Logic | Controls **Room Light (Yellow LED)** |
+| **GPIO 17 (`TX2`)**| 4-Channel Relay (CH4) | `IN4` | 3.3V Logic | Controls **Projector (White LED)** |
+| **GPIO 18** | MFRC522 RFID | `SCK` | 3.3V Logic | SPI Clock |
+| **GPIO 19** | MFRC522 RFID | `MISO` | 3.3V Logic | SPI Master In / Slave Out |
+| **GPIO 21** | I2C LCD Backpack | `SDA` | 5V / 3.3V I2C | I2C Serial Data |
+| **GPIO 22** | I2C LCD Backpack | `SCL` | 5V / 3.3V I2C | I2C Serial Clock |
+| **GPIO 23** | MFRC522 RFID | `MOSI` | 3.3V Logic | SPI Master Out / Slave In |
+| **GPIO 25** | 5V Active Buzzer | `(+)` Longer Leg| 3.3V Drive | Audio feedback (card chime & security alarm) |
+| **GPIO 26** | 4-Channel Relay (CH1) | `IN1` | 3.3V Logic | Controls **5V DC Fan** |
+| **GPIO 27** | DHT22 Sensor | `Data / Pin 2` | 3.3V Logic | Reads room temperature & humidity |
+| **GPIO 32** | IR Sensor 1 (Outside) | `OUT` | 3.3V Logic | Door Entry Trigger (Active-LOW) |
+| **GPIO 33** | IR Sensor 2 (Inside) | `OUT` | 3.3V Logic | Door Exit Trigger (Active-LOW) |
 
-| ESP32 GPIO | Peripheral | Pin on Module | Wire Color |
-|------------|-----------|---------------|------------|
-| **3.3V** | MFRC522 VCC | 3.3V | Red |
-| **3.3V** | DHT22 VCC | Pin 1 | Red |
-| **3.3V** | IR Sensor 1 VCC | VCC | Red |
-| **3.3V** | IR Sensor 2 VCC | VCC | Red |
-| **5V (VIN)** | LCD VCC | VCC | Red |
-| **5V (VIN)** | Relay Module VCC | VCC | Red |
-| **GND** | All modules GND | GND | Black |
-| **GPIO 2** | Card Button S1 (Hasanul) | Button pin | Blue |
-| **GPIO 4** | MFRC522 RST | RST | Purple |
-| **GPIO 5** | MFRC522 SDA (SS/CS) | SDA | Orange |
-| **GPIO 12** | Card Button S3 (Maria) | Button pin | Purple |
-| **GPIO 13** | Relay CH3 — AC | IN3 | Blue |
-| **GPIO 14** | Relay CH2 — Light | IN2 | Blue |
-| **GPIO 15** | Card Button T (Teacher) | Button pin | Orange |
-| **GPIO 16 (RX2)** | Card Button S2 (Jubair) | Button pin | Cyan |
-| **GPIO 17 (TX2)** | Relay CH4 — Projector | IN4 | Blue |
-| **GPIO 18** | MFRC522 SCK | SCK | Gray |
-| **GPIO 19** | MFRC522 MISO | MISO | Gold |
-| **GPIO 21** | LCD SDA (I2C) | SDA | Green |
-| **GPIO 22** | LCD SCL (I2C) | SCL | Yellow |
-| **GPIO 23** | MFRC522 MOSI | MOSI | Blue |
-| **GPIO 25** | Active Buzzer (+) | + | Purple |
-| **GPIO 26** | Relay CH1 — Fan | IN1 | Blue |
-| **GPIO 27** | DHT22 Data | Pin 2 | Green |
-| **GPIO 32** | IR Sensor 1 OUT (Outside/Entry) | OUT | Green |
-| **GPIO 33** | IR Sensor 2 OUT (Inside/Exit) | OUT | Red |
-| **GPIO 34** | Unknown Card Button | Button pin | Gray |
+*(Note: Simulator virtual button pins GPIO 15, 2, 16, 12, 34 are disabled in physical hardware to eliminate floating pin noise).*
 
 ---
 
-## 🛠️ Step-by-Step Physical Assembly Instructions
-
-### Phase 1: ESP32 Expansion Board & Power Distribution Setup
-
-1. **Mount the ESP32 on the Expansion Board:**
-   - Align the 30-pin ESP32 DevKit V1 with the socket on the **30-pin ESP32 Expansion Board** (antenna pointing outwards, USB port accessible).
-   - Press down gently and evenly until all pins are fully seated in the headers.
-2. **Expansion Board Power Distribution:**
-   - The expansion board provides dedicated **VCC** (5V / 3.3V selectable or separated rails) and **GND** terminal pins for every GPIO.
-   - For **5V peripherals** (LCD VCC, Relay VCC, DC Fan): connect to **5V / VIN** terminals.
-   - For **3.3V peripherals** (MFRC522 VCC, DHT22, IR Sensors): connect to **3.3V** terminals.
-3. **Mini Breadboard Setup (For Discrete LEDs & Resistors):**
-   - Place the **170-point mini breadboard** next to the expansion board.
-   - Use it exclusively to hold the 3 discrete prototype LEDs (Yellow, Blue, White) and their 220Ω resistors.
-   - Connect the mini breadboard's ground rail to a **GND** terminal on the expansion board using an M-F jumper wire.
-
-> [!IMPORTANT]
-> The ESP32 has TWO voltage outputs:
-> - **3.3V** — for sensors: RFID module, DHT22, IR sensors
-> - **VIN (5V)** — for the LCD and Relay module
->
-> **Never connect the MFRC522 RFID module to 5V. It will be permanently damaged.**
+## 🛠️ Step-by-Step Hardware Assembly & Wiring
 
 ---
 
-### Phase 2: MFRC522 RFID Reader (SPI Bus)
-
-```
-MFRC522 Pin    →  ESP32 GPIO
-──────────────────────────────
-3.3V (VCC)     →  3.3V
-GND            →  GND
-RST            →  GPIO 4    (Purple wire)
-SDA (SS/CS)    →  GPIO 5    (Orange wire)
-SCK            →  GPIO 18   (Gray wire)
-MISO           →  GPIO 19   (Gold wire)
-MOSI           →  GPIO 23   (Blue wire)
-```
-
-> [!TIP]
-> Most MFRC522 boards come with unsoldered header pins. **Solder all 8 pins before wiring.** Keep SPI wires shorter than 20cm to avoid signal integrity issues.
+### Step 1: ESP32 Power & Ground Rails
+1. Seat the 30-pin ESP32 into the expansion board socket with the Wi-Fi antenna pointing outward.
+2. Establish a **Common Ground Rail** on the mini breadboard by connecting an M-F jumper wire from **ESP32 GND** to the blue `(-)` rail.
+3. Power the system with a **5V / 2A phone wall adapter** or through the expansion board's DC barrel jack (avoid weak 500mA PC USB 2.0 ports to prevent brownouts).
 
 ---
 
-### Phase 3: DHT22 Temperature & Humidity Sensor
-
-```
-DHT22 Pin   →  ESP32
-────────────────────────
-Pin 1 (+)   →  3.3V
-Pin 2 (Data)→  GPIO 27   (Green wire)
-Pin 3 (NC)  →  (not connected)
-Pin 4 (-)   →  GND
-```
-
-> [!NOTE]
-> The DHT22 **module** (with the small PCB backboard) already has the 10kΩ pull-up resistor built in. If you have a **bare DHT22 sensor** (without PCB), add a 10kΩ resistor between Data pin and 3.3V.
-
----
-
-### Phase 4: 16×2 LCD with I2C Module
-
-The I2C backpack (PCF8574) reduces wiring from 12 wires to just 4:
-
-```
-I2C LCD Pin  →  ESP32
-───────────────────────
-GND          →  GND
-VCC          →  5V (VIN)
-SDA          →  GPIO 21   (Green wire)
-SCL          →  GPIO 22   (Yellow wire)
-```
-
-> [!TIP]
-> **I2C Address**: Most I2C LCD modules default to `0x27`. If the LCD stays blank after uploading, try `0x3F`. You can run an I2C scanner sketch to find the address. Address is set in code: `LiquidCrystal_I2C lcd(0x27, 16, 2);`
-
----
-
-### Phase 5: Active Buzzer
-
-```
-Buzzer Pin        →  ESP32
-───────────────────────────
-+ (longer leg)    →  GPIO 25
-- (shorter leg)   →  GND
-```
+### Step 2: MFRC522 RFID Reader (SPI Bus)
 
 > [!CAUTION]
-> Use an **ACTIVE** buzzer only (it has a built-in oscillator). A **passive** buzzer (just a piezo disk) will not produce expected alarm sounds with the `tone()` function. Active buzzers are usually marked with a sticker covering the hole on top.
-
----
-
-### Phase 6: 4-Channel Relay Module — Control Wiring
-
-**Step 1 — Connect relay control pins to ESP32:**
-```
-Relay Pin  →  ESP32 GPIO
-────────────────────────────────────────────────
-VCC        →  5V (VIN)
-GND        →  GND
-IN1        →  GPIO 26   ← CH1: DC Fan (real motor)
-IN2        →  GPIO 14   ← CH2: Yellow LED (Light prototype)
-IN3        →  GPIO 13   ← CH3: Blue LED (AC prototype)
-IN4        →  GPIO 17   ← CH4: White LED (Projector prototype)
-```
-
----
-
-### Phase 6a: CH1 — DC Fan Load Wiring (Real Motor)
-
-The fan is switched via the relay using the ESP32's own 5V (VIN) rail:
+> **CRITICAL:** Connect MFRC522 **VCC to 3.3V ONLY**. Connecting 5V will permanently burn the chip!
 
 ```
-ESP32 VIN (5V) (+) ──────────► Relay CH1 COM
-                               Relay CH1 NO ──────────► Fan (+) Red wire
-                                                              │
-                                                         [1N4007 diode]
-                                                         Cathode (stripe)→ Fan (+)
-                                                         Anode           → Fan (-)
-ESP32 GND (-)  ──────────────────────────────────────► Fan (-) Black wire
+MFRC522 Pin       ESP32 Pin
+───────────────────────────
+3.3V (VCC)  ───►  3.3V
+GND         ───►  GND
+RST         ───►  GPIO 4
+SDA (SS)    ───►  GPIO 5
+SCK         ───►  GPIO 18
+MISO        ───►  GPIO 19
+MOSI        ───►  GPIO 23
+IRQ         ───►  (Leave unconnected)
 ```
 
-> [!WARNING]
-> **CRITICAL — 1N4007 Flyback Diode (Fan only — do NOT skip this):**
->
-> The DC fan motor produces a large back-EMF voltage spike when the relay cuts power. This can reset or permanently damage the ESP32.
->
-> Wire the diode **across the fan motor terminals** (not across the relay):
-> - **Cathode (Silver stripe)** → Fan (+) / Relay NO side
-> - **Anode (plain black end)** → Fan (−) / GND
->
-> ⚠️ If wired **backwards**: it short-circuits your 5V supply the moment the relay turns ON.
+#### Physical RFID Card Roster:
+| Card UID | Role | Member Name | System Action |
+| :--- | :--- | :--- | :--- |
+| **`B1C7030A`** | 👩‍🏫 Teacher | **Sayma Ma'am** | Marks Teacher Present $\rightarrow$ Enables Projector & Attendance |
+| **`532E13ADA10001`** | 👨‍🎓 Student 1 | **Hasanul** | Validates entry tap $\rightarrow$ Unlocks 10s door passage |
+| **`534BD4AFA10001`** | 👨‍🎓 Student 2 | **Jubair** | Validates entry tap $\rightarrow$ Unlocks 10s door passage |
+| **`53148AABA10001`** | 👩‍🎓 Student 3 | **Maria** | Validates entry tap $\rightarrow$ Unlocks 10s door passage |
+| *(Any other UID)* | 🚨 Unknown | **Access Denied** | Triggers 3-beep security alarm & pushes Firebase alert |
 
 ---
 
-### Phase 6b: CH2 / CH3 / CH4 — LED Load Wiring (Light / AC / Projector prototypes)
+### Step 3: Active Buzzer (GPIO 25)
 
-Each LED channel uses the same simple circuit. Wire the LED through a **220Ω resistor** to limit current:
+1. **Polarity:**
+   * **`(+)` (Longer leg or marked `+` on sticker):** Connect to **ESP32 GPIO 25**.
+   * **`(-)` (Shorter leg):** Connect to **GND**.
+2. **Drive Method:**
+   * An **Active Buzzer** has an internal oscillator. Driven via simple `digitalWrite(HIGH)` and `digitalWrite(LOW)`. **Do not use `tone()`** (which interferes with the internal oscillator and causes silence).
+   * In code, the pin is initialized `LOW` so the buzzer is **100% silent at idle** with zero hissing or noise.
+3. **Volume Tip:** Peel off the small protective paper seal covering the sound hole on top for maximum acoustic loudness.
+
+---
+
+### Step 4: Dual IR Direction Door Gate (IR1 & IR2)
+
+Mount the two IR sensor boards **10–15 cm apart** at the doorway:
+* **IR Sensor 1 (Outside Face):**
+  * `VCC` $\rightarrow$ **3.3V**, `GND` $\rightarrow$ **GND**, `OUT` $\rightarrow$ **GPIO 32**
+* **IR Sensor 2 (Inside Face):**
+  * `VCC` $\rightarrow$ **3.3V**, `GND` $\rightarrow$ **GND**, `OUT` $\rightarrow$ **GPIO 33**
 
 ```
-Relay CHx NO ──────────► [220Ω Resistor] ──────────► LED (+) Anode (longer leg)
-                                                       LED (-) Cathode (shorter leg) ──► GND
-Relay CHx COM ──────────► ESP32 VIN (5V)
+   OUTSIDE CLASSROOM                              INSIDE CLASSROOM
+  ┌──────────────────┐                          ┌──────────────────┐
+  │   IR SENSOR 1    │                          │   IR SENSOR 2    │
+  │ (Outside / Entry)│                          │  (Inside / Exit) │
+  └────────┬─────────┘                          └────────┬─────────┘
+           │                                             │
+           ▼                                             ▼
+   Wave IR1 ──► Then IR2                         Wave IR2 ──► Then IR1
+   =====================                         =====================
+   👉 ENTERING (Entry)                           👈 LEAVING (Exit)
 ```
 
-**Channel-by-channel LED assignment:**
-
-| Relay Channel | GPIO | LED Color | Represents |
-|--------------|------|-----------|------------|
-| CH2 | GPIO 14 | 🟡 Yellow | Room Light |
-| CH3 | GPIO 13 | 🔵 Blue | Air Conditioner (AC) |
-| CH4 | GPIO 17 | ⚪ White | Projector |
-
-> [!NOTE]
-> LEDs do NOT need a flyback diode — they are not inductive loads. The 220Ω resistor is sufficient protection.
-> Each LED draws ~15mA at 5V through a 220Ω resistor, well within safe limits.
+* **Trimpot Tuning:** Use a small screwdriver to turn the blue potentiometer on each IR module until its obstacle LED triggers cleanly when your hand is ~15–20 cm away.
+* **Entry Logic:** Tap card outside $\rightarrow$ Step through `IR1 -> IR2` within 10s $\rightarrow$ Welcome chime, `totalCount++`.
+* **Security Intruder Alert:** Step through `IR1 -> IR2` **without tapping card** $\rightarrow$ 🚨 3-Beep Alarm, access violation logged!
+* **Contactless Free Exit:** Step through `IR2 -> IR1` (no card needed to leave) $\rightarrow$ `totalCount--`. When `totalCount == 0`, classroom enters empty mode and shuts all appliances off.
 
 ---
 
-### Phase 7: IR Door Sensors
-
-Mount two IR sensors on the door frame, approximately 10–15cm apart:
+### Step 5: DHT22 Temperature & Humidity Sensor (GPIO 27)
 
 ```
-IR Sensor 1 (OUTSIDE face of door):    IR Sensor 2 (INSIDE face of door):
-VCC → 3.3V                              VCC → 3.3V
-GND → GND                               GND → GND
-OUT → GPIO 32                           OUT → GPIO 33
+DHT22 Pin        ESP32 Pin
+──────────────────────────
+Pin 1 (VCC) ───► 3.3V
+Pin 2 (Data)───► GPIO 27
+Pin 3 (NC)  ───► (Not connected)
+Pin 4 (GND) ───► GND
 ```
-
-> [!TIP]
-> Adjust the small blue **potentiometer (trim pot)** on each IR sensor board with a screwdriver to set the detection range (~20–40cm for a doorway).
->
-> **Direction detection & Presence logic:**
-> - **Person ENTERING**: Tap RFID card outside the door, then step through `IR1 -> IR2`. Increments `totalCount`.
-> - **Person EXITING (Contactless Free Exit)**: No RFID tap required! Simply step through `IR2 -> IR1`. Decrements `totalCount`.
-> - **Teacher Presence Rule**:
->   - If `totalCount > 0` $\rightarrow$ Teacher is **PRESENT**, appliances active.
->   - If `totalCount == 0` $\rightarrow$ Teacher is **ABSENT**, all appliances (Fan, Light, AC, Projector) automatically shut OFF.
+*(If using a bare DHT22 without PCB module, place a 10kΩ pull-up resistor between Pin 2 Data and 3.3V).*
 
 ---
 
-### Phase 8: RFID Card Registration
+### Step 6: 4-Channel Relay Module & Appliance Wiring
 
-The firmware uses hardcoded UIDs. To register your physical RFID cards:
+#### A. Relay Input Control Headers:
+* `VCC` $\rightarrow$ **ESP32 VIN (5V)**
+* `GND` $\rightarrow$ **ESP32 GND**
+* `IN1` $\rightarrow$ **GPIO 26** (Controls CH1: Fan)
+* `IN2` $\rightarrow$ **GPIO 14** (Controls CH2: Room Light)
+* `IN3` $\rightarrow$ **GPIO 13** (Controls CH3: AC)
+* `IN4` $\rightarrow$ **GPIO 17 (`TX2`)** (Controls CH4: Projector)
 
-1. Upload the sketch, open **Serial Monitor** at `115200 baud`.
-2. Tap any RFID card on the MFRC522 reader.
-3. Serial output will show: `[RFID SCAN] Card UID: XXXXXXXX`
-4. Open `sketch.ino`, update lines ~404–408:
-   ```cpp
-   if (scannedHex.indexOf("DEADBEEF") >= 0)      onCard(0); // Teacher
-   else if (scannedHex.indexOf("12345678") >= 0) onCard(1); // Student 1
-   else if (scannedHex.indexOf("AABBCCDD") >= 0) onCard(2); // Student 2
-   else if (scannedHex.indexOf("11223344") >= 0) onCard(3); // Student 3
-   ```
-   Replace the UID strings with your actual card UIDs.
-5. Re-upload the updated sketch.
+> [!IMPORTANT]
+> **Active-LOW Logic:** Most 5V relay modules are **ACTIVE-LOW** (writing `LOW` turns the relay ON, writing `HIGH` turns it OFF). The firmware sets `const bool RELAY_ACTIVE_LOW = true;` to handle this automatically.
 
----
-
-### Phase 9: Wi-Fi & Firebase Configuration (Physical ESP32)
-
-1. Open `sketch.ino`, update lines 20–21:
-   ```cpp
-   const char* WIFI_SSID = "YourHotspotName";  // 2.4GHz Wi-Fi only
-   const char* WIFI_PASS = "YourPassword";
-   ```
-2. Firebase URL remains the same as used in Wokwi:
-   ```cpp
-   const char* FIREBASE_URL = "https://smart-classroom-team06-default-rtdb.asia-southeast1.firebasedatabase.app";
-   ```
-3. Upload the sketch to the physical ESP32.
-4. Open Serial Monitor — you should see: `Connected! IP: 192.168.x.x`
-5. Open your Android app and log in — dashboard should update in real time!
-
----
-
-## ⚠️ Common Mistakes to Avoid
-
-### Critical Errors (Will damage hardware or cause non-functional system)
-
-| # | Mistake | Problem | Fix |
-|---|---------|---------|-----|
-| 1 | **Powering MFRC522 from 5V** | Module permanently burned; SPI errors | Always use **3.3V** for MFRC522 |
-| 2 | **No flyback diode on DC motor fan** | ESP32 resets randomly or gets damaged | Add **1N4007 diode** across fan terminals |
-| 3 | **Flyback diode installed backwards** | Short-circuits power supply when relay turns ON | Silver stripe (Cathode) must go to Fan (+) |
-| 4 | **Using DHT11 instead of DHT22** | 1°C resolution makes 27.0°C / 25.5°C thresholds meaningless | Use DHT22 specifically |
-| 5 | **Using a passive buzzer** | Buzzer produces no sound or very faint noise | Use an **active buzzer** with built-in oscillator |
-| 6 | **GPIO 34 used with INPUT_PULLUP** | GPIO 34/35/36/39 have NO internal pull-up on ESP32 | Add external **10kΩ** resistor from GPIO 34 to 3.3V |
-
----
-
-### Software / Configuration Mistakes
-
-| # | Mistake | Problem | Fix |
-|---|---------|---------|-----|
-| 7 | **Wrong I2C address for LCD** | LCD stays dark or shows garbage | Default is `0x27`; try `0x3F`; run I2C scanner |
-| 8 | **Firebase URL has trailing slash** | HTTP PUT returns 404 error | Remove trailing `/` from URL |
-| 9 | **Firebase rules not in Test Mode** | All writes return 401 Unauthorized | Set rules: `".read": true, ".write": true` |
-| 10 | **Using charge-only USB cable** | Cannot upload sketch; device not detected | Use a **data-capable** Micro-B USB cable |
-| 11 | **Wrong baud rate in Serial Monitor** | Garbled text in Serial output | Set Serial Monitor to exactly **115200 baud** |
-| 12 | **RFID card UID not updated in code** | Every tap triggers Unknown card alert | Read actual UID from Serial Monitor; update sketch |
-| 13 | **5GHz Wi-Fi used** | ESP32 stays offline; never connects | ESP32 **only supports 2.4GHz** Wi-Fi networks |
-
----
-
-### Wiring / Assembly Mistakes
-
-| # | Mistake | Problem | Fix |
-|---|---------|---------|-----|
-| 14 | **IR sensors wired to 5V** | Logic-level mismatch on 3.3V input pins | Use **3.3V** for IR sensors |
-| 15 | **SPI wires MOSI/MISO swapped** | RFID never detects cards | Verify: MOSI=23, MISO=19, SCK=18 |
-| 16 | **IR1 and IR2 sensors swapped** | Entry detected as exit and vice versa | IR1 (GPIO 32) = OUTSIDE; IR2 (GPIO 33) = INSIDE |
-| 17 | **Relay IN logic inverted** | Some relay boards are ACTIVE LOW | If relay triggers on LOW, swap `HIGH : LOW` in code |
-| 18 | **LCD SDA/SCL wires swapped** | I2C fails; LCD blank | SDA → GPIO 21, SCL → GPIO 22 |
-| 19 | **Fan connected directly to GPIO** | GPIO max 12mA; motor draws much more; pin burns | Always switch fan power via **relay module** |
-| 20 | **Long SPI wires for RFID (>30cm)** | Intermittent RFID reads; cards missed | Keep MFRC522 wires under **20cm** |
-
----
-
-## 🧪 Pre-Power-On Safety Checklist
-
-Before plugging in the USB cable for the first time:
-
-- [ ] ESP32 is firmly seated in the 30-pin expansion board socket with correct orientation
-- [ ] All **3.3V** peripherals (RFID, DHT22, IR sensors) are on **3.3V**, NOT 5V
-- [ ] All **5V** peripherals (LCD, Relay VCC) are on **5V (VIN)**, NOT 3.3V
-- [ ] **GPIO 34** has the 10kΩ external pull-up resistor to 3.3V
-- [ ] **MFRC522 SPI wires**: SCK=18, MISO=19, MOSI=23, SS=5, RST=4
-- [ ] **I2C wires**: SDA=21, SCL=22
-- [ ] **DHT22** Data pin on GPIO 27
-- [ ] **Relay IN pins**: IN1=GPIO 26, IN2=GPIO 14, IN3=GPIO 13, IN4=GPIO 17
-- [ ] **IR sensors**: OUT1=GPIO 32 (outside), OUT2=GPIO 33 (inside)
-- [ ] **Buzzer (+)** on GPIO 25
-- [ ] **1N4007 diode** across fan motor with correct polarity (stripe to Fan+)
-- [ ] No bare wires are touching each other (especially near power rails)
-
----
-
-## 📡 Complete System Architecture
+#### B. Daisy-Chaining the 5V Supply to `COM` Terminals:
+The yellow jumper on the board connects `JD-VCC` to `VCC` for relay coil power, but the screw terminal `COM` ports are **electrically isolated**. You must bridge the 5V rail across all 4 channels:
 
 ```
-                 ┌─────────────────────────────────────────────────┐
-                 │          Smart Classroom System                 │
-                 └──────────────────┬──────────────────────────────┘
-                                    │
-       ┌────────────────────────────┼─────────────────────────────┐
-       │                           │                             │
-┌──────▼──────┐           ┌────────▼────────┐           ┌───────▼──────┐
-│  Sensors &   │           │  ESP32 DevKit   │           │  4 Actuators │
-│  RFID Input  │           │  (Main Brain)   │           │  via Relays  │
-│             │           │                 │           │             │
-│ MFRC522     │──SPI────►│ WiFi to Cloud   │──GPIO──►  │ Fan (CH1)   │
-│ DHT22       │──GPIO───►│ Direction Logic  │           │ Light (CH2) │
-│ IR1/IR2     │──GPIO───►│ Firebase REST    │           │ AC (CH3)    │
-│ Buzzer      │◄──GPIO───│ LCD Rendering    │           │ Proj (CH4)  │
-│ LCD 16x2    │◄──I2C────│                 │           │             │
-└─────────────┘           └────────┬────────┘           └─────────────┘
-                                   │ HTTPS REST
-                                   ▼
-                       ┌─────────────────────┐
-                       │  Firebase Realtime  │
-                       │     Database        │
-                       │                     │
-                       │ /classroom/live      │
-                       │ /classroom/alerts    │
-                       │ /classroom/history   │
-                       └──────────┬──────────┘
-                                  │ WebSocket
-                                  ▼
-                       ┌─────────────────────┐
-                       │  Android App        │
-                       │ (Kotlin + MVVM)     │
-                       │                     │
-                       │ Login (Auth)         │
-                       │ Live Dashboard       │
-                       │ Intruder Alerts      │
-                       │ History Log          │
-                       └─────────────────────┘
+ ESP32 VIN (5V) ──► K1 COM ──► K2 COM ──► K3 COM ──► K4 COM
 ```
 
----
-
-## 🚀 Automation Rules Quick Reference
-
-| Condition | Fan | Light | AC | Projector |
-|-----------|-----|-------|----|-----------|
-| Room empty (no one inside) | OFF | OFF | OFF | OFF |
-| Students only (no teacher) | Temp-based | ON | Temp-based | OFF |
-| Teacher only | Temp-based | ON | Temp-based | ON |
-| Teacher + Students | Temp-based | ON | Temp-based | ON |
-
-**Temperature Thresholds:**
-- Fan ON at >= 27.0°C | Fan OFF at <= 25.5°C
-- AC ON at >= 30.0°C  | AC OFF at <= 28.5°C
-
----
-
-## 🔗 Related Project Files
-
-| File | Description |
-|------|-------------|
-| [`3D_PROTOTYPE_PLACEMENT_GUIDE.md`](file:///d:/Study/3.2/CSE-315/Project/simulation/3D_PROTOTYPE_PLACEMENT_GUIDE.md) | 3D prototype spatial placement guide with renders & dimensional zoning |
-| [`3d_prototype_viewer/index.html`](file:///d:/Study/3.2/CSE-315/Project/simulation/3d_prototype_viewer/index.html) | Interactive 3D Web Prototype Viewer (Three.js with 360° rotation) |
-| [`RoboticsBD_Components_Price_List.xlsx`](file:///d:/Study/3.2/CSE-315/Project/simulation/RoboticsBD_Components_Price_List.xlsx) | Excel BOM Spreadsheet with live prices & purchase links from store.roboticsbd.com |
-| [`RoboticsBD_Components_Price_List.csv`](file:///d:/Study/3.2/CSE-315/Project/simulation/RoboticsBD_Components_Price_List.csv) | CSV version of the RoboticsBD components price list |
-| [`sketch.ino`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/sketch.ino) | Full ESP32 firmware with Firebase sync |
-| [`diagram.json`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/diagram.json) | Wokwi circuit diagram (virtual reference) |
-| [`README_WOKWI.md`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/README_WOKWI.md) | Wokwi simulation guide |
-| [`PHASE_2_FIREBASE_GUIDE.md`](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/PHASE_2_FIREBASE_GUIDE.md) | Firebase setup instructions |
-| [`README_ANDROID.md`](file:///d:/Study/3.2/CSE-315/Project/simulation/android_app/README_ANDROID.md) | Android app build and run guide |
+#### C. Appliance Load Connections:
+* **CH1 (5V DC Cooling Fan):**
+  * `K1 NO` $\rightarrow$ Fan Red (+) wire
+  * Fan Black (-) wire $\rightarrow$ Common GND
+  * **1N4007 Flyback Diode:** Connected directly across the fan terminals!
+    * **Silver Stripe (Cathode):** Must face **Fan Red (+) / Relay NO**
+    * **Plain Black (Anode):** Must face **Fan Black (-) / GND**
+    * *(If backwards, it creates a dead short when the relay clicks).*
+* **CH2 (Room Light):**
+  * `K2 NO` $\rightarrow$ `[220Ω Resistor]` $\rightarrow$ Yellow LED Anode (+) $\rightarrow$ LED Cathode (-) $\rightarrow$ GND
+* **CH3 (Air Conditioner):**
+  * `K3 NO` $\rightarrow$ `[220Ω Resistor]` $\rightarrow$ Blue LED Anode (+) $\rightarrow$ LED Cathode (-) $\rightarrow$ GND
+* **CH4 (Projector):**
+  * `K4 NO` $\rightarrow$ `[220Ω Resistor]` $\rightarrow$ White LED Anode (+) $\rightarrow$ LED Cathode (-) $\rightarrow$ GND
 
 ---
 
-*Smart Classroom Management and Automation System — Team 06, CSE 316 Lab, University of Asia Pacific*
+### Step 7: I2C 16×2 LCD Screen
+
+```
+I2C Backpack Pin      ESP32 Pin
+───────────────────────────────
+GND             ───►  GND
+VCC             ───►  VIN (5V)   ◄── (Must be 5V, not 3.3V!)
+SDA             ───►  GPIO 21
+SCL             ───►  GPIO 22
+```
+
+* **Contrast Trimpot:** Adjust the brass screw on the blue potentiometer on the back of the LCD until characters appear sharp and dark.
+* **3-Page Display Rotation (Every 3s):**
+  * Page 1: `Tchr: Present/Absent` | `Total: X  Stud: Y`
+  * Page 2: `Temp: XX.X C` | `Unknown alerts: Z`
+  * Page 3: `Fan: ON/OFF Lght: ON/OFF` | `AC: ON/OFF Proj: ON/OFF`
+  * Alert banners pop up temporarily on card scans, intruder alerts, and room status changes.
+
+---
+
+### Step 8: Cloud Architecture & Dual-Core FreeRTOS
+
+To prevent network stalls from freezing physical door and card sensors:
+
+1. **Core 1 (Application Core):** Runs `loop()` at **< 1ms latency**. Directly handles RFID scanning, IR beam tracking, relay switching, and LCD updates. It **never makes blocking HTTPS network calls**.
+2. **Core 0 (Protocol Core):** Runs `firebaseTask` in the background:
+   * Sets `vTaskDelay(pdMS_TO_TICKS(1500))` between consecutive SSL calls so the lwIP stack cleanly tears down the TCP socket and frees its 30KB TLS memory buffer.
+   * Syncs live state to `/classroom/live.json`.
+   * Pushes security alarms to `/classroom/alerts.json`.
+   * Logs periodic history snapshots to `/classroom/history.json`.
+3. **Mobile Hotspot Reliability:** Do **not** call `WiFi.config` after `WiFi.begin`, as it breaks the lwIP default gateway routing table. Use native DHCP and allow 4 seconds after boot for network stack stabilization.
+
+---
+
+## ⚠️ Real-World Troubleshooting & Gotchas Discovered
+
+| Issue Encountered | Root Cause | Solution Verified |
+| :--- | :--- | :--- |
+| **Relay clicks, but fan doesn't spin** | 1N4007 flyback diode connected backwards, shorting 5V to GND | Flip diode: **Silver stripe (Cathode) to Fan Red (+)**, plain black to GND |
+| **All devices behave in opposite** | Physical relay module is Active-LOW | Set `const bool RELAY_ACTIVE_LOW = true;` in sketch |
+| **Can't find GPIO 17 on board** | Labeled as `TX2` on 30-pin ESP32 DevKit | Connect Relay IN4 to pin labeled **`TX2`** (next to D5) |
+| **K2, K3, K4 don't turn on** | Screw terminal COMs are electrically isolated | Daisy-chain jumper wires: `K1 COM -> K2 COM -> K3 COM -> K4 COM` to 5V |
+| **Buzzer is silent or clicks faintly** | Active buzzer driven with `tone()` or sticker on hole | Use `digitalWrite(HIGH/LOW)` instead of `tone()`, and peel off the top sticker |
+| **Buzzer makes noise when idle** | Driving buzzer low-side from 5V into 3.3V GPIO | Connect Buzzer `(+)` to **GPIO 25**, `(-)` to **GND** for 100% idle silence |
+| **Phantom card taps at startup** | Floating Wokwi simulator button pins (GPIO 15, 2, 16, 12, 34) | Disable `updateCards()` in code; rely 100% on real MFRC522 RFID reader |
+| **Sensors lag & miss door crossings** | Synchronous `firebaseSyncLive()` blocked main loop for 3s | Offload Firebase to **Core 0 FreeRTOS background task** |
+| **`[FIREBASE PUT ERR] connection refused`** | Calling `WiFi.config` after `WiFi.begin` broke lwIP gateway route | Remove post-connect `WiFi.config`, add 1.5s delay between SSL requests |
+| **LCD dims when all devices turn ON** | 5V rail sags from ~850mA load exceeding PC USB 500mA limit | Power via **5V / 2A phone wall charger** or Expansion Board DC barrel jack |
+
+---
+
+## 🚀 Pre-Demo Verification Checklist
+
+- [ ] **Power Supply:** ESP32 plugged into a 5V / 2A wall charger (not a 500mA USB port).
+- [ ] **Diode Orientation:** 1N4007 silver stripe points to Fan Red (+) / Relay NO.
+- [ ] **Relay COMs:** Middle screw terminals K1, K2, K3, K4 daisy-chained to ESP32 VIN (5V).
+- [ ] **Relay Logic:** `RELAY_ACTIVE_LOW = true;` in [sketch.ino](file:///d:/Study/3.2/CSE-315/Project/simulation/wokwi_esp32_simulation/sketch.ino).
+- [ ] **Buzzer:** `(+)` to GPIO 25, `(-)` to GND, protective top sticker removed.
+- [ ] **RFID Module:** Powered by **3.3V ONLY**.
+- [ ] **Dual IR Gate:** IR1 (GPIO 32) outside door, IR2 (GPIO 33) inside door, trimpots tuned to ~20cm.
+- [ ] **LCD Screen:** Powered by 5V (VIN), SDA on 21, SCL on 22, contrast trimpot tuned.
+- [ ] **Wi-Fi & Cloud:** SSID and Password set; Serial Monitor displays `[FIREBASE POST OK] -> HTTP 200`.
+- [ ] **Mobile App:** Android App opens and displays live attendance, temperature gauge, and appliance states.
+
+---
+
+*Smart Classroom Management and Automation System — Team 06, CSE 315 / 316 Lab, University of Asia Pacific*
